@@ -34,9 +34,10 @@ h1{font-family:'Instrument Serif',serif;font-size:26px;font-weight:400;letter-sp
 .page-dot.active{background:var(--ink);width:18px;border-radius:3px;}
 
 /* ── FILTERS ── */
-.filters-wrap{padding:8px 0 12px;display:flex;justify-content:center;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.filters-wrap{padding:8px 0 12px;display:flex;align-items:center;justify-content:center;gap:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
 .filters-wrap::-webkit-scrollbar{display:none;}
-.filter-inner{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
+.filter-inner{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding-left:12px;}
+.vtog-separator{width:1px;background:var(--ink-faint);align-self:stretch;margin:0 8px;flex-shrink:0;}
 .filter-btn{flex-shrink:0;padding:5px 13px;border-radius:20px;border:1.5px solid var(--ink-faint);background:transparent;font-family:'Figtree',sans-serif;font-size:12px;font-weight:500;color:var(--ink-soft);cursor:pointer;transition:all .15s;}
 .filter-btn.active{background:var(--ink);border-color:var(--ink);color:#fff;}
 .filter-btn[data-f="today"].active{background:var(--today-c);border-color:var(--today-c);}
@@ -45,8 +46,8 @@ h1{font-family:'Instrument Serif',serif;font-size:26px;font-weight:400;letter-sp
 .filter-btn[data-f="perso"].active{background:var(--perso);border-color:var(--perso);}
 
 /* view toggle (liste / kanban) */
-.view-toggle{display:flex;gap:6px;padding:0 0 10px;justify-content:center;}
-.vtog-btn{padding:4px 14px;border-radius:20px;border:1.5px solid var(--ink-faint);background:transparent;font-family:'Figtree',sans-serif;font-size:12px;font-weight:500;color:var(--ink-soft);cursor:pointer;transition:all .15s;}
+.view-toggle{display:flex;flex-direction:column;gap:4px;padding:0;}
+.vtog-btn{padding:6px 14px;border-radius:20px;border:1.5px solid var(--ink-faint);background:transparent;font-family:'Figtree',sans-serif;font-size:12px;font-weight:500;color:var(--ink-soft);cursor:pointer;transition:all .15s;white-space:nowrap;}
 .vtog-btn.active{background:var(--ink);border-color:var(--ink);color:#fff;}
 
 /* ── BOOK ── */
@@ -198,6 +199,23 @@ main{overflow:hidden;}
 .sync-badge.syncing{color:var(--today-c);border-color:var(--today-c);background:var(--today-soft);}
 .sync-badge.error{color:var(--urgent);border-color:var(--urgent);background:var(--overdue-soft);}
 .sync-badge.offline{color:var(--ink-soft);border-color:var(--ink-faint);background:var(--bg);}
+.kcard-move-popup{position:fixed;background:var(--surface);border-radius:12px;box-shadow:0 4px 20px rgba(26,23,20,.2);padding:8px;z-index:200;min-width:160px;display:none;flex-direction:column;gap:4px;border:1px solid var(--ink-faint);}
+.kcard-move-popup.open{display:flex;}
+.kcard-move-opt{padding:8px 12px;border:none;background:transparent;text-align:left;font-family:'Figtree',sans-serif;font-size:13px;cursor:pointer;border-radius:8px;color:var(--ink);}
+.kcard-move-opt:hover{background:var(--bg);}
+.kcard-wrap{position:relative;}
+.modal-close-btn{position:absolute;top:16px;right:16px;border:none;background:none;font-size:22px;line-height:1;cursor:pointer;color:var(--ink-soft);padding:4px 8px;border-radius:8px;z-index:10;}
+.modal-close-btn:hover{background:var(--bg);color:var(--ink);}
+.modal{position:relative;}
+.vmenu-item{display:block;width:100%;text-align:left;padding:8px 12px;border:none;background:transparent;font-family:'Figtree',sans-serif;font-size:13px;cursor:pointer;border-radius:8px;color:var(--ink);}
+.vmenu-item:hover{background:var(--bg);}
+.vmenu-item.raz{color:var(--urgent);}
+.vmenu-item.raz:hover{background:var(--overdue-soft);}
+.vmenu-item.gist{color:var(--pro);}
+.vmenu-item.gist:hover{background:var(--pro-soft);}
+#versionMenuBtn.gist-ok{border-color:var(--done);color:var(--done);}
+#versionMenuBtn.gist-err{border-color:var(--urgent);color:var(--urgent);}
+#versionMenuBtn.gist-sync{border-color:var(--today-c);color:var(--today-c);}
 .kanban-sub-head{display:flex;align-items:center;justify-content:space-between;padding:14px 4px 6px;margin-top:10px;border-top:1px solid var(--ink-faint);}
 .kanban-someday .kcard{opacity:.75;background:var(--someday-soft);}
 .kanban-waiting .kcard{opacity:.75;background:var(--waiting-soft);}
@@ -227,7 +245,7 @@ main{overflow:hidden;}
 .kanban-col-head{padding:12px 14px 10px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--ink-faint);}
 .kanban-col-title{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-soft);}
 .kanban-col-count{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-faint);margin-left:auto;}
-.kanban-col-body{padding:10px 10px 10px;min-height:80px;}
+.kanban-col-body{padding:10px 10px 10px;min-height:80px;max-height:340px;overflow-y:auto;scrollbar-width:thin;}
 .kanban-col-body.drag-over{background:rgba(123,79,191,.06);border-radius:8px;}
 
 /* Kanban card */
@@ -324,14 +342,16 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 <header>
   <div class="header-top">
     <h1>Mes Tâches</h1>
-    <div class="date-label" id="dateLabel"></div>
+      <div class="date-label" id="dateLabel"></div>
   </div>
-  <div style="display:flex;justify-content:center;align-items:center;gap:8px;padding:6px 20px 0;flex-wrap:wrap;">
-    <button class="io-btn import" id="importBtn">⬆ Import</button>
-    <button class="io-btn export" id="exportBtn">⬇ Export</button>
-    <button class="io-btn raz" id="razBtn">🗑 RaZ</button>
-    <span class="sync-badge offline" id="syncBadge" title="Configurer la sync Gist">☁ Gist</span>
-  </div>
+  <div id="versionMenu" style="display:none;position:fixed;background:var(--surface);border-radius:14px;box-shadow:0 4px 24px rgba(26,23,20,.15);border:1px solid var(--ink-faint);padding:8px;z-index:500;min-width:180px;flex-direction:column;gap:2px;">
+      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--ink-soft);padding:4px 8px 8px;border-bottom:1px solid var(--ink-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Mes Tâches · v0.5.10</div>
+      <button class="vmenu-item" id="importBtn">⬆ Importer</button>
+      <button class="vmenu-item" id="exportBtn">⬇ Exporter</button>
+      <button class="vmenu-item raz" id="razBtn">🗑 Remise à zéro</button>
+      <div style="height:1px;background:var(--ink-faint);margin:4px 0;"></div>
+      <button class="vmenu-item gist" id="syncBadge">☁ Connexion Gist</button>
+    </div>
   <div class="page-tabs">
     <div class="page-tab-labels">
       <button class="page-tab active" data-page="0">Dashboard</button>
@@ -345,11 +365,12 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     </div>
   </div>
   <div class="filters-wrap" id="filtersWrap" style="display:none">
+    <div class="view-toggle" id="viewToggle">
+      <button class="vtog-btn active" data-v="liste">☰ Liste</button>
+      <button class="vtog-btn" data-v="kanban">⬛ Kanban</button>
+    </div>
+    <div class="vtog-separator"></div>
     <div class="filter-inner" id="filterInner"></div>
-  </div>
-  <div class="view-toggle" id="viewToggle" style="display:none">
-    <button class="vtog-btn active" data-v="liste">☰ Liste</button>
-    <button class="vtog-btn" data-v="kanban">⬛ Kanban</button>
   </div>
 </header>
 
@@ -388,6 +409,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div class="modal-head">
       <h2 id="taskModalTitle">Nouvelle tâche</h2>
       <span class="edit-badge" id="taskEditBadge" style="display:none">Modification</span>
+      <button class="modal-close-btn" id="taskModalCloseBtn" aria-label="Fermer">×</button>
     </div>
     <div class="field"><label>Intitulé *</label><input type="text" id="inputTitle" placeholder="Que dois-je faire ?" autocomplete="off"/></div>
     <div class="field">
@@ -425,6 +447,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div class="modal-head">
       <h2 id="objModalTitle">Nouvel objectif</h2>
       <span class="edit-badge" id="objEditBadge" style="display:none">Modification</span>
+      <button class="modal-close-btn" id="objModalCloseBtn" aria-label="Fermer">×</button>
     </div>
     <div class="field"><label>Icône</label><div class="emoji-row" id="emojiRow"></div></div>
     <div class="field"><label>Titre *</label><input type="text" id="inputObjTitle" placeholder="Mon objectif…" autocomplete="off"/></div>
@@ -516,7 +539,16 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 function persistUI(){saveUI({page:currentPage,filter:activeFilter,objFilter:activeObjFilter,actionsView,openBuckets:[...openBuckets]});}
 
-document.getElementById('dateLabel').textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+' · v0.5.4';
+const _dateLabelEl=document.getElementById('dateLabel');
+_dateLabelEl.innerHTML='';
+const _dateSpan=document.createElement('span');
+_dateSpan.textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+' · ';
+const _verBtn=document.createElement('button');
+_verBtn.id='versionMenuBtn';
+_verBtn.textContent='v0.5.10';
+_verBtn.style.cssText='font-family:inherit;font-size:inherit;background:none;border:none;cursor:pointer;padding:0;color:inherit;font-weight:600;text-decoration:underline dotted;';
+_dateLabelEl.appendChild(_dateSpan);
+_dateLabelEl.appendChild(_verBtn);
 
 // ══════════════════════════════════════════════════════════
 // PAGE NAVIGATION
@@ -534,15 +566,14 @@ function goToPage(n,animate=true){
 
   const fw=document.getElementById('filtersWrap');
   const sb=document.getElementById('statsBar');
-  const vt=document.getElementById('viewToggle');
   const fab=document.getElementById('fabBtn');
 
   // Page 0: Dashboard
-  if(n===0){fw.style.display='none';sb.style.display='none';vt.style.display='none';fab.className='fab';}
+  if(n===0){fw.style.display='none';sb.style.display='none';fab.className='fab';}
   // Page 1: Objectifs
-  else if(n===1){fw.style.display='flex';sb.style.display='none';vt.style.display='none';fab.className='fab obj-mode';renderFilters();}
+  else if(n===1){fw.style.display='flex';sb.style.display='none';document.getElementById('viewToggle').style.display='none';fab.className='fab obj-mode';renderFilters();}
   // Page 2: Actions
-  else{fw.style.display='flex';sb.style.display='flex';vt.style.display='flex';fab.className='fab';renderFilters();}
+  else{fw.style.display='flex';sb.style.display='flex';document.getElementById('viewToggle').style.display='flex';fab.className='fab';renderFilters();}
 
   render();
 }
@@ -1173,11 +1204,22 @@ function taskCardHTML(t){
 // ── KANBAN ────────────────────────────────────────────────
 function renderKanban(wrap){
   // Only active tasks, not someday, not done
-  const base=tasks.filter(t=>!t.done&&t.status!=='un-jour');
-  const todoItems=base.filter(t=>!t.status||t.status==='a-faire');
-  const somedayItems=tasks.filter(t=>!t.done&&t.status==='un-jour');
-  const inProgressItems=base.filter(t=>t.status==='en-cours');
-  const waitingItems=base.filter(t=>t.status==='en-attente');
+  // Apply active filter to kanban
+  function kanbanVisible(t){
+    if(t.done)return false;
+    switch(activeFilter){
+      case 'urgent':return!!t.urgent;
+      case 'today':return t.due===todayStr||(t.due&&t.due<todayStr);
+      case 'someday':return t.status==='un-jour';
+      case 'done':return false;
+      default:return true; // 'all'
+    }
+  }
+  const kvis=tasks.filter(kanbanVisible);
+  const todoItems=kvis.filter(t=>!t.status||t.status==='a-faire');
+  const somedayItems=kvis.filter(t=>t.status==='un-jour');
+  const inProgressItems=kvis.filter(t=>t.status==='en-cours');
+  const waitingItems=kvis.filter(t=>t.status==='en-attente');
 
   // Sort: overdue+urgent first, then by due date
   function sortK(arr){
@@ -1241,10 +1283,42 @@ function renderKanban(wrap){
     bindKanbanTouchDrag(card,tid);
     card.querySelector('.kcard-check')?.addEventListener('change',()=>toggleDone(tid));
     card.querySelector('.kcard-edit')?.addEventListener('click',e=>{e.stopPropagation();openTaskModal(tid);});
-    card.querySelector('.kcard-status-btn')?.addEventListener('click',e=>{
+    const moveBtn=card.querySelector('.kcard-move-btn');
+    const movePopup=card.querySelector('.kcard-move-popup');
+    // Portal: move popup to body to escape overflow clipping
+    if(movePopup&&movePopup.parentNode!==document.body){
+      document.body.appendChild(movePopup);
+    }
+    moveBtn?.addEventListener('click',e=>{
+      e.stopPropagation();
+      // close any other open popups
+      document.querySelectorAll('.kcard-move-popup').forEach(p=>{if(p!==movePopup)p.style.display='none';});
+      const wasOpen=movePopup.style.display==='flex';
+      movePopup.style.display='none';
+      if(wasOpen)return;
+      const btnR=moveBtn.getBoundingClientRect();
+      const vw=window.innerWidth, vh=window.innerHeight;
+      const popW=165, popH=190;
+      let left=btnR.right+6;
+      if(left+popW>vw-8)left=btnR.left-popW-6;
+      if(left<8)left=8;
+      let top=btnR.top;
+      if(top+popH>vh-8)top=vh-popH-8;
+      if(top<8)top=8;
+      movePopup.style.left=left+'px';
+      movePopup.style.top=top+'px';
+      movePopup.style.display='flex';
+    });
+    card.querySelectorAll('.kcard-move-opt').forEach(opt=>opt.addEventListener('click',e=>{
       e.stopPropagation();
       const t=tasks.find(t=>t.id===tid);if(!t)return;
-      t.status=e.target.dataset.target;saveTasks(tasks);renderActions();
+      t.status=opt.dataset.target;
+      movePopup.style.display='none';
+      saveTasks(tasks);renderActions();
+    }));
+    card.querySelector('.kcard-move-close')?.addEventListener('click',e=>{
+      e.stopPropagation();
+      movePopup.style.display='none';
     });
   });
 }
@@ -1254,7 +1328,6 @@ function kCardHTML(t,moveToStatus){
   const due=dueInfo(t.due);
   const isOverdue=due&&due.cls==='overdue';
   const isWaiting=t.status==='en-attente';
-  const moveLabel=moveToStatus==='en-cours'?'→ En cours':'← À faire';
   return `<div class="kcard ${isOverdue?'overdue':''} ${isWaiting?'waiting':''}" data-id="${t.id}">
     <div class="kcard-title">${esc(t.title)}</div>
     <div class="kcard-meta">
@@ -1265,15 +1338,40 @@ function kCardHTML(t,moveToStatus){
     </div>
     <div class="kcard-actions">
       <input class="kcard-check" type="checkbox" ${t.done?'checked':''} aria-label="Fait">
-      <button class="kcard-status-btn" data-target="${moveToStatus}">${moveLabel}</button>
+      <div class="kcard-wrap">
+        <button class="kcard-move-btn">Bouger ▾</button>
+        <div class="kcard-move-popup">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:2px 4px 6px;border-bottom:1px solid var(--ink-faint);margin-bottom:4px;">
+            <span style="font-size:11px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.4px">Déplacer</span>
+            <button class="kcard-move-close" style="border:none;background:none;font-size:16px;cursor:pointer;color:var(--ink-soft);padding:0 2px;line-height:1;">×</button>
+          </div>
+          <button class="kcard-move-opt" data-target="a-faire">📋 À faire</button>
+          <button class="kcard-move-opt" data-target="en-cours">▶ En cours</button>
+          <button class="kcard-move-opt" data-target="en-attente">⏳ En attente</button>
+          <button class="kcard-move-opt" data-target="un-jour">☁️ Un jour</button>
+        </div>
+      </div>
       <button class="kcard-edit">✎</button>
     </div>
   </div>`;
 }
 
+// ── MODAL CLOSE BTNS ─────────────────────────────────────
+document.getElementById('taskModalCloseBtn').addEventListener('click', closeTaskModal);
+document.getElementById('objModalCloseBtn').addEventListener('click', closeObjModal);
+
+// Close move popup on outside click
+document.addEventListener('click', ()=>{
+  document.querySelectorAll('.kcard-move-popup').forEach(p=>p.style.display='none');
+});
+
 // ── ESC ───────────────────────────────────────────────────
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
+  const openMove=document.querySelector('.kcard-move-popup[style*="flex"]');
+  if(openMove){openMove.style.display='none';return;}
+  if(document.getElementById('donePoupOverlay').classList.contains('open')){closeDonePopup();return;}
+  if(document.getElementById('gistOverlay').classList.contains('open')){document.getElementById('gistOverlay').classList.remove('open');return;}
   if(overlayTask.classList.contains('open')){closeTaskModal();return;}
   if(overlayObj.classList.contains('open'))closeObjModal();
 });
@@ -1293,8 +1391,13 @@ function getGistCfg(){
 
 function setSyncBadge(state,label){
   const b=document.getElementById('syncBadge');
-  b.className='sync-badge '+state;
-  b.textContent=label;
+  if(b){b.textContent='☁ '+label;}
+  const vBtn=document.getElementById('versionMenuBtn');
+  if(!vBtn)return;
+  if(state==='synced'){vBtn.style.borderColor='var(--done)';vBtn.style.color='var(--done)';}
+  else if(state==='error'){vBtn.style.borderColor='var(--urgent)';vBtn.style.color='var(--urgent)';}
+  else if(state==='syncing'){vBtn.style.borderColor='var(--today-c)';vBtn.style.color='var(--today-c)';}
+  else{vBtn.style.borderColor='var(--ink-faint)';vBtn.style.color='var(--ink-soft)';}
 }
 
 async function loadFromGist(){
@@ -1351,7 +1454,25 @@ function scheduleGistSync(){
 }
 
 // Gist modal
-document.getElementById('syncBadge').addEventListener('click',()=>{
+// Version menu toggle
+const vMenuBtn=document.getElementById('versionMenuBtn');
+const vMenu=document.getElementById('versionMenu');
+vMenuBtn.addEventListener('click',e=>{
+  e.stopPropagation();
+  const isOpen=vMenu.style.display==='flex';
+  vMenu.style.display=isOpen?'none':'flex';
+  if(!isOpen){
+    const r=vMenuBtn.getBoundingClientRect();
+    vMenu.style.top=(r.bottom+6)+'px';
+    vMenu.style.right=(window.innerWidth-r.right)+'px';
+  }
+});
+document.addEventListener('click',()=>{vMenu.style.display='none';});
+
+// Gist menu item opens gist modal
+document.getElementById('syncBadge').addEventListener('click',e=>{
+  e.stopPropagation();
+  vMenu.style.display='none';
   const{id,token}=getGistCfg();
   document.getElementById('gistIdInput').value=id||'';
   document.getElementById('gistTokenInput').value=token||'';
@@ -1380,8 +1501,8 @@ document.getElementById('gistClearBtn').addEventListener('click',()=>{
 // Init: load from gist on startup if configured
 (async()=>{
   const{id,token}=getGistCfg();
-  if(id&&token)await loadFromGist();
-  else setSyncBadge('offline','☁ Gist');
+  if(id&&token){setSyncBadge('syncing','Connexion…');await loadFromGist();}
+  else setSyncBadge('offline','Non connecté');
 })();
 
 
@@ -1443,11 +1564,19 @@ document.getElementById('importFileInput').addEventListener('change',e=>{
   reader.readAsText(file);
 });
 document.getElementById('razBtn').addEventListener('click',()=>{
-  if(!confirm('Supprimer TOUTES les tâches et objectifs ? Cette action est irréversible.'))return;
+  if(!confirm('Supprimer TOUTES les tâches et objectifs ?\nUn export automatique sera effectué avant la suppression.'))return;
+  // Auto-export before RaZ
+  const data={tasks,objectives,exportedAt:new Date().toISOString(),version:'0.5.7',note:'Export automatique avant RaZ'};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='mes-taches-avant-raz-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();URL.revokeObjectURL(a.href);
+  // Then clear
   tasks=[];objectives=[];
   saveTasks(tasks);saveObjs(objectives);
   renderObjectives();renderActions();renderDashboard();
-  showToast('🗑 Données supprimées');
+  showToast('🗑 Données supprimées (export sauvegardé)');
 });
 
 // ESC ferme aussi le done popup
