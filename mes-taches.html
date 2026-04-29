@@ -345,7 +345,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <div class="date-label" id="dateLabel"></div>
   </div>
   <div id="versionMenu" style="display:none;position:fixed;background:var(--surface);border-radius:14px;box-shadow:0 4px 24px rgba(26,23,20,.15);border:1px solid var(--ink-faint);padding:8px;z-index:500;min-width:180px;flex-direction:column;gap:2px;">
-      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--ink-soft);padding:4px 8px 8px;border-bottom:1px solid var(--ink-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Mes Tâches · v0.5.10</div>
+      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--ink-soft);padding:4px 8px 8px;border-bottom:1px solid var(--ink-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Mes Tâches · v0.5.11</div>
       <button class="vmenu-item" id="importBtn">⬆ Importer</button>
       <button class="vmenu-item" id="exportBtn">⬇ Exporter</button>
       <button class="vmenu-item raz" id="razBtn">🗑 Remise à zéro</button>
@@ -545,7 +545,7 @@ const _dateSpan=document.createElement('span');
 _dateSpan.textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+' · ';
 const _verBtn=document.createElement('button');
 _verBtn.id='versionMenuBtn';
-_verBtn.textContent='v0.5.10';
+_verBtn.textContent='v0.5.11';
 _verBtn.style.cssText='font-family:inherit;font-size:inherit;background:none;border:none;cursor:pointer;padding:0;color:inherit;font-weight:600;text-decoration:underline dotted;';
 _dateLabelEl.appendChild(_dateSpan);
 _dateLabelEl.appendChild(_verBtn);
@@ -870,6 +870,8 @@ function bindKanbanTouchDrag(el,taskId,targetStatusOnRight){
   let timer=null,dragging=false;
   const title=tasks.find(t=>t.id===taskId)?.title||'';
   el.addEventListener('touchstart',e=>{
+    const tgt=e.target;
+    if(tgt.closest('.kcard-move-btn')||tgt.closest('.kcard-move-popup'))return;
     timer=setTimeout(()=>{dragging=true;kDragId=taskId;const tc=e.touches[0];createGhost(title,tc.clientX,tc.clientY);if(navigator.vibrate)navigator.vibrate(30);},350);
   },{passive:true});
   el.addEventListener('touchmove',e=>{
@@ -1289,6 +1291,12 @@ function renderKanban(wrap){
     if(movePopup&&movePopup.parentNode!==document.body){
       document.body.appendChild(movePopup);
     }
+    // iOS: touchend fires click reliably
+    moveBtn?.addEventListener('touchend',e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      moveBtn.click();
+    },{passive:false});
     moveBtn?.addEventListener('click',e=>{
       e.stopPropagation();
       // close any other open popups
@@ -1297,13 +1305,14 @@ function renderKanban(wrap){
       movePopup.style.display='none';
       if(wasOpen)return;
       const btnR=moveBtn.getBoundingClientRect();
-      const vw=window.innerWidth, vh=window.innerHeight;
+      const vw=Math.min(window.innerWidth,window.visualViewport?.width||window.innerWidth);
+      const vh=Math.min(window.innerHeight,window.visualViewport?.height||window.innerHeight);
       const popW=165, popH=190;
       let left=btnR.right+6;
       if(left+popW>vw-8)left=btnR.left-popW-6;
       if(left<8)left=8;
-      let top=btnR.top;
-      if(top+popH>vh-8)top=vh-popH-8;
+      let top=btnR.bottom;
+      if(top+popH>vh-8)top=btnR.top-popH-4;
       if(top<8)top=8;
       movePopup.style.left=left+'px';
       movePopup.style.top=top+'px';
@@ -1339,7 +1348,7 @@ function kCardHTML(t,moveToStatus){
     <div class="kcard-actions">
       <input class="kcard-check" type="checkbox" ${t.done?'checked':''} aria-label="Fait">
       <div class="kcard-wrap">
-        <button class="kcard-move-btn">Bouger ▾</button>
+        <button class="kcard-move-btn" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Bouger ▾</button>
         <div class="kcard-move-popup">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:2px 4px 6px;border-bottom:1px solid var(--ink-faint);margin-bottom:4px;">
             <span style="font-size:11px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.4px">Déplacer</span>
