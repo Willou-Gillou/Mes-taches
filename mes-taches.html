@@ -345,7 +345,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <div class="date-label" id="dateLabel"></div>
   </div>
   <div id="versionMenu" style="display:none;position:fixed;background:var(--surface);border-radius:14px;box-shadow:0 4px 24px rgba(26,23,20,.15);border:1px solid var(--ink-faint);padding:8px;z-index:500;min-width:180px;flex-direction:column;gap:2px;">
-      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--ink-soft);padding:4px 8px 8px;border-bottom:1px solid var(--ink-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Mes Tâches · v0.5.11</div>
+      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--ink-soft);padding:4px 8px 8px;border-bottom:1px solid var(--ink-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Mes Tâches · v0.5.12</div>
       <button class="vmenu-item" id="importBtn">⬆ Importer</button>
       <button class="vmenu-item" id="exportBtn">⬇ Exporter</button>
       <button class="vmenu-item raz" id="razBtn">🗑 Remise à zéro</button>
@@ -545,7 +545,7 @@ const _dateSpan=document.createElement('span');
 _dateSpan.textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+' · ';
 const _verBtn=document.createElement('button');
 _verBtn.id='versionMenuBtn';
-_verBtn.textContent='v0.5.11';
+_verBtn.textContent='v0.5.12';
 _verBtn.style.cssText='font-family:inherit;font-size:inherit;background:none;border:none;cursor:pointer;padding:0;color:inherit;font-weight:600;text-decoration:underline dotted;';
 _dateLabelEl.appendChild(_dateSpan);
 _dateLabelEl.appendChild(_verBtn);
@@ -1318,14 +1318,18 @@ function renderKanban(wrap){
       movePopup.style.top=top+'px';
       movePopup.style.display='flex';
     });
-    card.querySelectorAll('.kcard-move-opt').forEach(opt=>opt.addEventListener('click',e=>{
-      e.stopPropagation();
-      const t=tasks.find(t=>t.id===tid);if(!t)return;
-      t.status=opt.dataset.target;
-      movePopup.style.display='none';
-      saveTasks(tasks);renderActions();
-    }));
-    card.querySelector('.kcard-move-close')?.addEventListener('click',e=>{
+    movePopup.querySelectorAll('.kcard-move-opt').forEach(opt=>{
+      opt.style.touchAction='manipulation';
+      opt.addEventListener('touchend',e=>{e.preventDefault();opt.click();},{passive:false});
+      opt.addEventListener('click',e=>{
+        e.stopPropagation();
+        const t=tasks.find(t=>t.id===tid);if(!t)return;
+        t.status=opt.dataset.target;
+        movePopup.style.display='none';
+        saveTasks(tasks);renderActions();
+      });
+    });
+    movePopup.querySelector('.kcard-move-close')?.addEventListener('click',e=>{
       e.stopPropagation();
       movePopup.style.display='none';
     });
