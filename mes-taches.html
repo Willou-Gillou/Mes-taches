@@ -345,12 +345,13 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <div class="date-label" id="dateLabel"></div>
   </div>
   <div id="versionMenu" style="display:none;position:fixed;background:var(--surface);border-radius:14px;box-shadow:0 4px 24px rgba(26,23,20,.15);border:1px solid var(--ink-faint);padding:8px;z-index:500;min-width:180px;flex-direction:column;gap:2px;">
-      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--ink-soft);padding:4px 8px 8px;border-bottom:1px solid var(--ink-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Mes Tâches · v0.5.14</div>
+      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--ink-soft);padding:4px 8px 8px;border-bottom:1px solid var(--ink-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Mes Tâches · v0.5.16</div>
       <button class="vmenu-item" id="importBtn">⬆ Importer</button>
       <button class="vmenu-item" id="exportBtn">⬇ Exporter</button>
       <button class="vmenu-item raz" id="razBtn">🗑 Remise à zéro</button>
       <div style="height:1px;background:var(--ink-faint);margin:4px 0;"></div>
       <button class="vmenu-item gist" id="syncBadge">☁ Connexion Gist</button>
+      <button class="vmenu-item" id="forceSyncBtn">↻ Forcer l'écrasement</button>
     </div>
   <div class="page-tabs">
     <div class="page-tab-labels">
@@ -545,7 +546,7 @@ const _dateSpan=document.createElement('span');
 _dateSpan.textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+' · ';
 const _verBtn=document.createElement('button');
 _verBtn.id='versionMenuBtn';
-_verBtn.textContent='v0.5.14';
+_verBtn.textContent='v0.5.16';
 _verBtn.style.cssText='font-family:inherit;font-size:inherit;background:none;border:none;cursor:pointer;padding:0;color:inherit;font-weight:600;text-decoration:underline dotted;';
 _dateLabelEl.appendChild(_dateSpan);
 _dateLabelEl.appendChild(_verBtn);
@@ -1406,11 +1407,16 @@ document.querySelectorAll('.vtog-btn').forEach(b=>b.classList.toggle('active',b.
 // ── GIST SYNC ─────────────────────────────────────────────
 const GIST_ID_KEY='mes-taches-gist-id';
 const GIST_TOKEN_KEY='mes-taches-gist-token';
+const GIST_REMOTE_VERSION_KEY='mes-taches-gist-remote-version';
 let gistSyncTimer=null;
+let gistRemoteVersion=+(localStorage.getItem(GIST_REMOTE_VERSION_KEY)||0);
+let gistConflictPending=false;
 
 function getGistCfg(){
   return{id:localStorage.getItem(GIST_ID_KEY),token:localStorage.getItem(GIST_TOKEN_KEY)};
 }
+function setRemoteVersion(v){gistRemoteVersion=+v||0;localStorage.setItem(GIST_REMOTE_VERSION_KEY,String(gistRemoteVersion));}
+function buildGistPayload(nextVersion){return{version:nextVersion,updatedAt:new Date().toISOString(),deviceId:(localStorage.getItem('mes-taches-device-id')||(localStorage.setItem('mes-taches-device-id','dev-'+Math.random().toString(36).slice(2,10)),localStorage.getItem('mes-taches-device-id'))),tasks,objectives};}
 
 function setSyncBadge(state,label){
   const b=document.getElementById('syncBadge');
@@ -1440,6 +1446,8 @@ async function loadFromGist(){
       if(data.objectives)objectives=normO(data.objectives);
       localStorage.setItem(TASKS_KEY,JSON.stringify(tasks));
       localStorage.setItem(OBJS_KEY,JSON.stringify(objectives));
+      setRemoteVersion(data.version||0);
+      gistConflictPending=false;
       renderObjectives();renderActions();renderDashboard();
     }
     setSyncBadge('synced','✓ Gist');
@@ -1448,29 +1456,47 @@ async function loadFromGist(){
     console.warn('Gist load error:',e);
   }
 }
-
-async function pushToGist(){
+async function pushToGist(force=false){
   const{id,token}=getGistCfg();
   if(!id||!token)return;
   setSyncBadge('syncing','↻ Sync…');
   try{
-    const payload={files:{'taches.json':{content:JSON.stringify({tasks,objectives,updatedAt:new Date().toISOString()},null,2)}}};
+    const rr=await fetch(`https://api.github.com/gists/${id}`,{
+      headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json'}
+    });
+    if(!rr.ok)throw new Error('HTTP '+rr.status);
+    const gist=await rr.json();
+    const file=gist.files['taches.json'];
+    let remoteVersion=0;
+    if(file&&file.content){
+      try{remoteVersion=+(JSON.parse(file.content).version||0);}catch{}
+    }
+    if(!force && remoteVersion>gistRemoteVersion){
+      gistConflictPending=true;
+      setSyncBadge('error','⚠ Conflit');
+      const keep=confirm("Des données plus récentes existent sur un autre appareil.\n\nOK = recharger la version distante\nAnnuler = garder vos données locales pour l'instant");
+      if(keep){await loadFromGist();}
+      return;
+    }
+    const nextVersion=Math.max(remoteVersion,gistRemoteVersion)+1;
+    const payload={files:{'taches.json':{content:JSON.stringify(buildGistPayload(nextVersion),null,2)}}};
     const r=await fetch(`https://api.github.com/gists/${id}`,{
       method:'PATCH',
       headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},
       body:JSON.stringify(payload)
     });
     if(!r.ok)throw new Error('HTTP '+r.status);
+    setRemoteVersion(nextVersion);
+    gistConflictPending=false;
     setSyncBadge('synced','✓ Gist');
   }catch(e){
     setSyncBadge('error','✕ Erreur');
     console.warn('Gist push error:',e);
   }
 }
-
 function scheduleGistSync(){
   const{id,token}=getGistCfg();
-  if(!id||!token){setSyncBadge('offline','☁ Gist');return;}
+  if(!id||!token){setSyncBadge('offline','Non connecté');return;}
   clearTimeout(gistSyncTimer);
   setSyncBadge('syncing','↻ Sync…');
   gistSyncTimer=setTimeout(pushToGist,1200);
@@ -1500,6 +1526,12 @@ document.getElementById('syncBadge').addEventListener('click',e=>{
   document.getElementById('gistIdInput').value=id||'';
   document.getElementById('gistTokenInput').value=token||'';
   document.getElementById('gistOverlay').classList.add('open');
+});
+document.getElementById('forceSyncBtn').addEventListener('click',async e=>{
+  e.stopPropagation();
+  vMenu.style.display='none';
+  if(!confirm("Forcer l'écrasement des données distantes avec vos données locales ?"))return;
+  await pushToGist(true);
 });
 document.getElementById('gistOverlay').addEventListener('click',e=>{
   if(e.target===document.getElementById('gistOverlay'))document.getElementById('gistOverlay').classList.remove('open');
