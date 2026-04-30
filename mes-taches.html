@@ -350,7 +350,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <div class="date-label" id="dateLabel"></div>
   </div>
   <div id="versionMenu" style="display:none;position:fixed;background:var(--surface);border-radius:14px;box-shadow:0 4px 24px rgba(26,23,20,.15);border:1px solid var(--ink-faint);padding:8px;z-index:500;min-width:180px;flex-direction:column;gap:2px;">
-      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--ink-soft);padding:4px 8px 8px;border-bottom:1px solid var(--ink-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Mes Tâches · v0.5.20</div>
+      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--ink-soft);padding:4px 8px 8px;border-bottom:1px solid var(--ink-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Mes Tâches · v0.5.18</div>
       <button class="vmenu-item" id="importBtn">⬆ Importer</button>
       <button class="vmenu-item" id="exportBtn">⬇ Exporter</button>
       <button class="vmenu-item raz" id="razBtn">🗑 Remise à zéro</button>
@@ -560,7 +560,7 @@ const _dateSpan=document.createElement('span');
 _dateSpan.textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+' · ';
 const _verBtn=document.createElement('button');
 _verBtn.id='versionMenuBtn';
-_verBtn.textContent='v0.5.20';
+_verBtn.textContent='v0.5.18';
 _verBtn.style.cssText='font-family:inherit;font-size:inherit;background:none;border:none;cursor:pointer;padding:0;color:inherit;font-weight:600;text-decoration:underline dotted;';
 _dateLabelEl.appendChild(_dateSpan);
 _dateLabelEl.appendChild(_verBtn);
@@ -1425,7 +1425,6 @@ const GIST_REMOTE_VERSION_KEY='mes-taches-gist-remote-version';
 let gistSyncTimer=null;
 let gistRemoteVersion=+(localStorage.getItem(GIST_REMOTE_VERSION_KEY)||0);
 let gistConflictPending=false;
-let gistLastUpdatedAt=localStorage.getItem('mes-taches-gist-updated-at')||'';
 
 function getGistCfg(){
   return{id:localStorage.getItem(GIST_ID_KEY),token:localStorage.getItem(GIST_TOKEN_KEY)};
@@ -1462,8 +1461,6 @@ async function loadFromGist(){
       localStorage.setItem(TASKS_KEY,JSON.stringify(tasks));
       localStorage.setItem(OBJS_KEY,JSON.stringify(objectives));
       setRemoteVersion(data.version||0);
-      gistLastUpdatedAt=g.updated_at||'';
-      localStorage.setItem('mes-taches-gist-updated-at',gistLastUpdatedAt);
       gistConflictPending=false;
       renderObjectives();renderActions();renderDashboard();
     }
@@ -1505,9 +1502,6 @@ async function pushToGist(force=false){
     if(!r.ok)throw new Error('HTTP '+r.status);
     setRemoteVersion(nextVersion);
     gistConflictPending=false;
-    // Refresh updated_at after push so next poll doesn't falsely trigger banner
-    const gr=await fetch(`https://api.github.com/gists/${id}`,{headers:{Authorization:`token ${token}`,Accept:'application/vnd.github.v3+json'}});
-    if(gr.ok){const gd=await gr.json();gistLastUpdatedAt=gd.updated_at||'';localStorage.setItem('mes-taches-gist-updated-at',gistLastUpdatedAt);}
     setSyncBadge('synced','✓ Gist');
   }catch(e){
     setSyncBadge('error','✕ Erreur');
@@ -1588,8 +1582,11 @@ async function fetchRemoteVersion(){
     });
     if(!r.ok)return null;
     const g=await r.json();
-    // Use GitHub's own updated_at as change detector — no need to parse file content
-    return g.updated_at||null;
+    const file=g.files['taches.json'];
+    if(file&&file.content){
+      return+(JSON.parse(file.content).version||0);
+    }
+    return null;
   }catch{return null;}
 }
 
@@ -1611,14 +1608,10 @@ document.getElementById('syncUpdateDismiss').addEventListener('click',hideUpdate
 
 async function checkRemoteVersion(){
   _lastCheckAt=Date.now();
-  const remoteUpdatedAt=await fetchRemoteVersion();
-  if(!remoteUpdatedAt)return;
-  if(remoteUpdatedAt!==gistLastUpdatedAt && gistLastUpdatedAt!==''){
+  const rv=await fetchRemoteVersion();
+  if(rv===null)return;
+  if(rv>gistRemoteVersion){
     showUpdateBanner();
-  } else if(gistLastUpdatedAt===''){
-    // First time - just store, don't show banner
-    gistLastUpdatedAt=remoteUpdatedAt;
-    localStorage.setItem('mes-taches-gist-updated-at',gistLastUpdatedAt);
   }
 }
 
@@ -1635,8 +1628,8 @@ function stopPolling(){
 // Pause/resume on tab visibility
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'){
-    // Always check immediately on return — no delay
-    checkRemoteVersion();
+    const elapsed=Date.now()-_lastCheckAt;
+    if(elapsed>=POLL_INTERVAL)checkRemoteVersion();
     startPolling();
   }else{
     stopPolling();
@@ -1649,7 +1642,6 @@ document.addEventListener('visibilitychange',()=>{
   if(id&&token){
     setSyncBadge('syncing','Connexion…');
     await loadFromGist();
-    _lastCheckAt=Date.now(); // don't re-trigger a check right after load
     startPolling();
   }else{
     setSyncBadge('offline','Non connecté');
