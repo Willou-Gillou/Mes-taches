@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Mes Tâches v0.5.23</title>
+<title>Mes Tâches v0.5.25</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -221,7 +221,7 @@ main{overflow:hidden;height:calc(100dvh - var(--header-h,130px));}
 .sync-badge.syncing{color:var(--today-c);border-color:var(--today-c);background:var(--today-soft);}
 .sync-badge.error{color:var(--urgent);border-color:var(--urgent);background:var(--overdue-soft);}
 .sync-badge.offline{color:var(--ink-soft);border-color:var(--ink-faint);background:var(--bg);}
-.kcard-move-popup{position:fixed;background:var(--surface);border-radius:12px;box-shadow:0 4px 20px rgba(26,23,20,.2);padding:8px;z-index:200;min-width:160px;display:none;flex-direction:column;gap:4px;border:1px solid var(--ink-faint);}
+.kcard-move-popup{background:var(--surface);border-radius:10px;box-shadow:0 4px 16px rgba(26,23,20,.15);padding:6px;min-width:150px;display:none;flex-direction:column;gap:2px;border:1px solid var(--ink-faint);margin-top:4px;}
 .kcard-move-popup.open{display:flex;}
 .kcard-move-opt{padding:8px 12px;border:none;background:transparent;text-align:left;font-family:'Figtree',sans-serif;font-size:13px;cursor:pointer;border-radius:8px;color:var(--ink);}
 .kcard-move-opt:hover{background:var(--bg);}
@@ -373,7 +373,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <div class="date-label" id="dateLabel"></div>
   </div>
   <div id="versionMenu" style="display:none;position:fixed;background:var(--surface);border-radius:14px;box-shadow:0 4px 24px rgba(26,23,20,.15);border:1px solid var(--ink-faint);padding:8px;z-index:500;min-width:180px;flex-direction:column;gap:2px;">
-      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--ink-soft);padding:4px 8px 8px;border-bottom:1px solid var(--ink-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Mes Tâches · v0.5.23</div>
+      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--ink-soft);padding:4px 8px 8px;border-bottom:1px solid var(--ink-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Mes Tâches · v0.5.25</div>
       <button class="vmenu-item" id="importBtn">⬆ Importer</button>
       <button class="vmenu-item" id="exportBtn">⬇ Exporter</button>
       <button class="vmenu-item raz" id="razBtn">🗑 Remise à zéro</button>
@@ -567,6 +567,7 @@ let currentPage   = uiState.page??0;
 let activeFilter  = uiState.filter||'all';
 let activeObjFilter = uiState.objFilter||'all';
 let actionsView   = uiState.actionsView||'liste'; // 'liste' | 'kanban'
+document.querySelectorAll('.vtog-btn').forEach(b=>b.classList.toggle('active',b.dataset.v===actionsView));
 let openBuckets   = new Set(uiState.openBuckets||['undef']);
 let selCtx=null, selObjCtx=null, isUrgent=false, selEmoji='🎯', selStatus='a-faire';
 let selSubtasks=[];
@@ -594,7 +595,7 @@ const _dateSpan=document.createElement('span');
 _dateSpan.textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+' · ';
 const _verBtn=document.createElement('button');
 _verBtn.id='versionMenuBtn';
-_verBtn.textContent='v0.5.23';
+_verBtn.textContent='v0.5.19';
 _verBtn.style.cssText='font-family:inherit;font-size:inherit;background:none;border:none;cursor:pointer;padding:0;color:inherit;font-weight:600;text-decoration:underline dotted;';
 _dateLabelEl.appendChild(_dateSpan);
 _dateLabelEl.appendChild(_verBtn);
@@ -759,7 +760,9 @@ function addSubtask(){
 }
 
 document.getElementById('addSubtaskBtn')?.addEventListener('click',addSubtask);
-document.getElementById('inputSubtask')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addSubtask();}});
+document.getElementById('inputSubtask')?.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.preventDefault();addSubtask();}
+});
 
 function saveTask(){
   const title=document.getElementById('inputTitle').value.trim();
@@ -951,28 +954,49 @@ function bindKanbanColDrop(colEl,targetStatus){
 }
 
 // Touch drag for kanban cards
-function bindKanbanTouchDrag(el,taskId,targetStatusOnRight){
+function bindKanbanTouchDrag(el,taskId){
   let timer=null,dragging=false;
   const title=tasks.find(t=>t.id===taskId)?.title||'';
+
+  function isInteractive(tgt){
+    return tgt.closest('.kcard-check')||tgt.closest('.kcard-edit')||
+           tgt.closest('.kcard-move-btn')||tgt.closest('.kcard-move-popup')||
+           tgt.closest('.kcard-move-opt')||tgt.tagName==='BUTTON'||tgt.tagName==='INPUT';
+  }
+
   el.addEventListener('touchstart',e=>{
-    const tgt=e.target;
-    if(tgt.closest('.kcard-move-btn')||tgt.closest('.kcard-move-popup'))return;
-    timer=setTimeout(()=>{dragging=true;kDragId=taskId;const tc=e.touches[0];createGhost(title,tc.clientX,tc.clientY);if(navigator.vibrate)navigator.vibrate(30);},350);
+    if(isInteractive(e.target))return;
+    timer=setTimeout(()=>{
+      dragging=true;kDragId=taskId;
+      const tc=e.touches[0];
+      createGhost(title,tc.clientX,tc.clientY);
+      if(navigator.vibrate)navigator.vibrate(30);
+    },400);
   },{passive:true});
+
   el.addEventListener('touchmove',e=>{
-    clearTimeout(timer);if(!dragging)return;e.preventDefault();
+    clearTimeout(timer);
+    if(!dragging)return;
+    e.preventDefault();
     const tc=e.touches[0];moveGhost(tc.clientX,tc.clientY);
     const col=kanbanColUnder(tc.clientX,tc.clientY);
     if(col!==lastKHL){clearKHL();if(col){col.classList.add('drag-over');lastKHL=col;}}
   },{passive:false});
+
   el.addEventListener('touchend',e=>{
     clearTimeout(timer);
-    if(dragging){const tc=e.changedTouches[0];const col=kanbanColUnder(tc.clientX,tc.clientY);
+    if(dragging){
+      const tc=e.changedTouches[0];
+      const col=kanbanColUnder(tc.clientX,tc.clientY);
       if(col&&kDragId){const t=tasks.find(t=>t.id===kDragId);if(t){t.status=col.dataset.kstatus;saveTasks(tasks);}}
     }
-    dragging=false;kDragId=null;removeGhost();clearKHL();renderActions();
+    dragging=false;kDragId=null;removeGhost();clearKHL();
+    if(dragging===false&&kDragId===null)renderActions();
   },{passive:true});
-  el.addEventListener('touchcancel',()=>{clearTimeout(timer);dragging=false;kDragId=null;removeGhost();clearKHL();},{passive:true});
+
+  el.addEventListener('touchcancel',()=>{
+    clearTimeout(timer);dragging=false;kDragId=null;removeGhost();clearKHL();
+  },{passive:true});
 }
 function kanbanColUnder(x,y){
   for(const c of document.querySelectorAll('.kanban-col-body[data-kstatus]')){
@@ -1308,11 +1332,11 @@ function renderKanban(wrap){
   }
   const kvis=tasks.filter(kanbanVisible);
   const cols=[
-    {key:'a-faire',           label:'À faire',        items:kvis.filter(t=>!t.status||t.status==='a-faire'),        moveTarget:'en-cours',          moveLabel:'→ En cours'},
-    {key:'en-cours',          label:'En cours',        items:kvis.filter(t=>t.status==='en-cours'),                  moveTarget:'en-attente-retour', moveLabel:'→ Attente retour'},
-    {key:'en-attente-retour', label:'Attente retour',  items:kvis.filter(t=>t.status==='en-attente-retour'),         moveTarget:'planifie',          moveLabel:'→ Planifié'},
-    {key:'planifie',          label:'Planifié',        items:kvis.filter(t=>t.status==='planifie'),                  moveTarget:'un-jour',           moveLabel:'→ Un jour'},
-    {key:'un-jour',           label:'☁️ Un jour',     items:kvis.filter(t=>t.status==='un-jour'),                   moveTarget:'a-faire',           moveLabel:'→ À faire'},
+    {key:'a-faire',           label:'À faire',       items:kvis.filter(t=>!t.status||t.status==='a-faire'),        moveLabel:'→ En cours'},
+    {key:'en-cours',          label:'En cours',       items:kvis.filter(t=>t.status==='en-cours'),                  moveLabel:'→ Attente retour'},
+    {key:'en-attente-retour', label:'Attente retour', items:kvis.filter(t=>t.status==='en-attente-retour'),         moveLabel:'→ Planifié'},
+    {key:'planifie',          label:'Planifié',       items:kvis.filter(t=>t.status==='planifie'),                  moveLabel:'→ Un jour'},
+    {key:'un-jour',           label:'☁️ Un jour',    items:kvis.filter(t=>t.status==='un-jour'),                   moveLabel:'→ À faire'},
   ];
   function sortK(arr){
     return [...arr].sort((a,b)=>{
@@ -1327,43 +1351,62 @@ function renderKanban(wrap){
     <div class="kanban-col">
       <div class="kanban-col-head"><span class="kanban-col-title">${col.label}</span><span class="kanban-col-count">${col.items.length}</span></div>
       <div class="kanban-col-body" data-kstatus="${col.key}">${
-        sortK(col.items).map(t=>kCardHTML(t,col.moveTarget,col.moveLabel)).join('')||
+        sortK(col.items).map(t=>kCardHTML(t,col.key)).join('')||
         '<div style="font-size:13px;color:var(--ink-faint);font-style:italic;padding:8px 4px">Aucune tâche</div>'
       }</div>
     </div>`).join('')}</div>`;
+
   wrap.querySelectorAll('.kanban-col-body').forEach(col=>bindKanbanColDrop(col,col.dataset.kstatus));
+
   wrap.querySelectorAll('.kcard').forEach(card=>{
     const tid=+card.dataset.id;
-    bindKanbanCardDrag(card,tid); bindKanbanTouchDrag(card,tid);
-    card.querySelector('.kcard-check')?.addEventListener('change',()=>toggleDone(tid));
-    card.querySelector('.kcard-edit')?.addEventListener('click',e=>{e.stopPropagation();openTaskModal(tid);});
-    const movePopup=card.querySelector('.kcard-move-popup');
-    card.querySelectorAll('.kcard-move-opt').forEach(opt=>{
-      opt.addEventListener('click',e=>{
-        e.stopPropagation();
-        const t=tasks.find(t=>t.id===tid);if(!t)return;
-        t.status=opt.dataset.target;
-        if(movePopup)movePopup.style.display='none';
-        saveTasks(tasks);renderActions();
-      });
+    // Drag desktop uniquement
+    bindKanbanCardDrag(card,tid);
+    // Touch drag (longpress) — exclu si on touche un bouton
+    bindKanbanTouchDrag(card,tid);
+
+    // ── Checkbox done ──
+    card.querySelector('.kcard-check')?.addEventListener('change', function(){
+      const t=tasks.find(t=>t.id===tid);
+      if(t){t.done=this.checked;t.doneAt=this.checked?new Date().toISOString():null;saveTasks(tasks);}
+      renderActions();
     });
+
+    // ── Bouton modifier ──
+    card.querySelector('.kcard-edit')?.addEventListener('click',e=>{
+      e.stopPropagation();e.preventDefault();
+      openTaskModal(tid);
+    });
+
+    // ── Bouton déplacer : toggle menu inline ──
     const moveBtn=card.querySelector('.kcard-move-btn');
-    moveBtn?.addEventListener('click',e=>{
-      e.stopPropagation();if(!movePopup)return;
-      document.querySelectorAll('.kcard-move-popup').forEach(pp=>{if(pp!==movePopup)pp.style.display='none';});
-      if(movePopup.style.display==='flex'){movePopup.style.display='none';return;}
-      const r=moveBtn.getBoundingClientRect();
-      const vw=window.innerWidth,popW=170;
-      let left=r.right+6;if(left+popW>vw-8)left=r.left-popW-6;if(left<8)left=8;
-      movePopup.style.left=left+'px';
-      movePopup.style.top=(r.bottom+4)+'px';
-      movePopup.style.display='flex';
-    });
-    movePopup?.querySelector('.kcard-move-close')?.addEventListener('click',e=>{e.stopPropagation();movePopup.style.display='none';});
+    const moveMenu=card.querySelector('.kcard-move-popup');
+    if(moveBtn&&moveMenu){
+      moveBtn.addEventListener('click',e=>{
+        e.stopPropagation();e.preventDefault();
+        // Fermer tous les autres menus ouverts
+        wrap.querySelectorAll('.kcard-move-popup.open').forEach(m=>{if(m!==moveMenu)m.classList.remove('open');});
+        moveMenu.classList.toggle('open');
+      });
+      moveMenu.querySelectorAll('.kcard-move-opt').forEach(opt=>{
+        opt.addEventListener('click',e=>{
+          e.stopPropagation();e.preventDefault();
+          const t=tasks.find(t=>t.id===tid);
+          if(t){t.status=opt.dataset.target;saveTasks(tasks);}
+          moveMenu.classList.remove('open');
+          renderActions();
+        });
+      });
+    }
+  });
+
+  // Fermer menus au clic dehors
+  wrap.addEventListener('click',()=>{
+    wrap.querySelectorAll('.kcard-move-popup.open').forEach(m=>m.classList.remove('open'));
   });
 }
 
-function kCardHTML(t, moveTarget, moveLabel){
+function kCardHTML(t, currentColKey){
   const obj=t.objectiveId?objectives.find(o=>o.id===t.objectiveId):null;
   const due=dueInfo(t.due);
   const isOverdue=due&&due.cls==='overdue';
@@ -1378,9 +1421,11 @@ function kCardHTML(t, moveTarget, moveLabel){
     {v:'planifie',         lb:'🗓 Planifié'},
     {v:'un-jour',          lb:'☁️ Un jour'},
   ];
-  const optsHTML=allTargets.filter(o=>o.v!==(t.status||'a-faire'))
-    .map(o=>`<button class="kcard-move-opt" data-target="${o.v}" style="text-align:left;padding:6px 10px;border:none;background:none;cursor:pointer;font-size:13px;border-radius:8px;color:var(--ink);">${o.lb}</button>`).join('');
-  return `<div class="kcard ${isOverdue?'overdue':''} ${t.status==='en-attente-retour'?'waiting':''} ${t.status==='planifie'?'planned':''}" data-id="${t.id}">
+  const optsHTML=allTargets
+    .filter(o=>o.v!==currentColKey)
+    .map(o=>`<button class="kcard-move-opt" data-target="${o.v}" style="text-align:left;padding:7px 10px;border:none;background:none;cursor:pointer;font-size:13px;border-radius:8px;color:var(--ink);width:100%;touch-action:manipulation;">${o.lb}</button>`)
+    .join('');
+  return `<div class="kcard ${isOverdue?'overdue':''} ${t.status==='en-attente-retour'?'waiting':''} ${t.status==='planifie'?'planned':''}" data-id="${t.id}" style="touch-action:manipulation;">
     <div class="kcard-title">${esc(t.title)}</div>
     ${subs?`<div class="sub-prog"><span class="sub-prog-label"><span class="sp-n">${subsDone}</span>/${subs.length} ✓</span><div class="sub-bar"><div class="sub-bar-fill" style="width:${subsPct}%"></div></div></div>`:''}
     <div class="kcard-meta">
@@ -1389,19 +1434,14 @@ function kCardHTML(t, moveTarget, moveLabel){
       ${due?`<span class="due-tag ${due.cls}">${due.label}</span>`:''}
       ${obj?`<span class="tag obj-tag" style="font-size:10px">${obj.icon} ${esc(obj.title)}</span>`:''}
     </div>
-    <div class="kcard-actions">
-      <input class="kcard-check" type="checkbox" ${t.done?'checked':''} aria-label="Fait">
-      <div class="kcard-wrap">
-        <button class="kcard-move-btn" title="Déplacer" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">${moveLabel||'Bouger ▾'}</button>
-        <div class="kcard-move-popup" style="display:none;position:fixed;z-index:9999;flex-direction:column;background:var(--surface);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:8px 6px;min-width:160px;border:1px solid var(--ink-faint);">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:2px 4px 6px;border-bottom:1px solid var(--ink-faint);margin-bottom:4px;">
-            <span style="font-size:11px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.4px">Déplacer vers</span>
-            <button class="kcard-move-close" style="border:none;background:none;font-size:16px;cursor:pointer;color:var(--ink-soft);padding:0 2px;line-height:1;">×</button>
-          </div>
-          ${optsHTML}
-        </div>
-      </div>
-      <button class="kcard-edit" title="Modifier">✎</button>
+    <div class="kcard-actions" style="touch-action:manipulation;">
+      <input class="kcard-check" type="checkbox" ${t.done?'checked':''} aria-label="Fait" style="touch-action:manipulation;">
+      <button class="kcard-move-btn" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:5px 10px;border-radius:8px;border:1.5px solid var(--ink-faint);background:transparent;font-size:12px;cursor:pointer;color:var(--ink-soft);">Déplacer ▾</button>
+      <button class="kcard-edit" title="Modifier" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">✎</button>
+    </div>
+    <div class="kcard-move-popup" style="touch-action:manipulation;">
+      <div style="padding:2px 4px 6px;border-bottom:1px solid var(--ink-faint);margin-bottom:4px;font-size:10px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;">Déplacer vers</div>
+      ${optsHTML}
     </div>
   </div>`;
 }
