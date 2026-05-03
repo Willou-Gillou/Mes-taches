@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Mes Tâches v0.5.25</title>
+<title>Mes Tâches v0.5.26</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -54,7 +54,7 @@ h1{font-family:'Instrument Serif',serif;font-size:26px;font-weight:400;letter-sp
 main{overflow:hidden;height:calc(100dvh - var(--header-h,130px));}
 .book{display:flex;width:300%;height:100%;transition:transform .35s cubic-bezier(.4,0,.2,1);will-change:transform;}
 .book.notrans{transition:none;}
-.page{width:calc(100%/3);flex-shrink:0;height:100%;overflow-y:auto;}
+.page{width:calc(100%/3);flex-shrink:0;height:100%;overflow-y:auto;overflow-x:hidden;}
 
 /* ── PAGE INNER ── */
 .page-inner{max-width:680px;margin:0 auto;padding:16px 16px 120px;}
@@ -199,7 +199,7 @@ main{overflow:hidden;height:calc(100dvh - var(--header-h,130px));}
 .drag-ghost{position:fixed;pointer-events:none;z-index:9999;background:var(--surface);border-radius:10px;padding:10px 14px;box-shadow:0 8px 24px rgba(26,23,20,.2);font-size:14px;font-weight:500;white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis;border-left:3px solid var(--obj);transform:translate(-50%,-50%) rotate(2deg) scale(1.04);opacity:.95;}
 
 /* ── KANBAN ── */
-.kanban-wrap{display:grid;grid-template-columns:repeat(5,minmax(180px,1fr));gap:10px;padding:16px 12px 120px;max-width:1400px;margin:0 auto;align-items:start;overflow-x:auto;}
+.kanban-wrap{display:grid;grid-template-columns:repeat(5,minmax(200px,1fr));gap:10px;padding:16px 12px 120px;max-width:1400px;margin:0 auto;align-items:start;}
 .kanban-col{background:var(--bg);border-radius:var(--radius);overflow:hidden;}
 .gist-modal-overlay{position:fixed;inset:0;background:rgba(26,23,20,.5);z-index:400;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
 .gist-modal-overlay.open{opacity:1;pointer-events:all;}
@@ -221,6 +221,7 @@ main{overflow:hidden;height:calc(100dvh - var(--header-h,130px));}
 .sync-badge.syncing{color:var(--today-c);border-color:var(--today-c);background:var(--today-soft);}
 .sync-badge.error{color:var(--urgent);border-color:var(--urgent);background:var(--overdue-soft);}
 .sync-badge.offline{color:var(--ink-soft);border-color:var(--ink-faint);background:var(--bg);}
+#pageActions{overflow-x:auto;}
 .kcard-move-popup{background:var(--surface);border-radius:10px;box-shadow:0 4px 16px rgba(26,23,20,.15);padding:6px;min-width:150px;display:none;flex-direction:column;gap:2px;border:1px solid var(--ink-faint);margin-top:4px;}
 .kcard-move-popup.open{display:flex;}
 .kcard-move-opt{padding:8px 12px;border:none;background:transparent;text-align:left;font-family:'Figtree',sans-serif;font-size:13px;cursor:pointer;border-radius:8px;color:var(--ink);}
@@ -272,7 +273,7 @@ main{overflow:hidden;height:calc(100dvh - var(--header-h,130px));}
 .kanban-col-head{padding:12px 14px 10px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--ink-faint);}
 .kanban-col-title{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-soft);}
 .kanban-col-count{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-faint);margin-left:auto;}
-.kanban-col-body{padding:10px 10px 10px;min-height:80px;max-height:340px;overflow-y:auto;scrollbar-width:thin;-webkit-overflow-scrolling:touch;}
+.kanban-col-body{padding:10px 10px 10px;min-height:80px;scrollbar-width:thin;}
 .kanban-col-body.drag-over{background:rgba(123,79,191,.06);border-radius:8px;}
 
 /* Kanban card */
@@ -595,10 +596,20 @@ const _dateSpan=document.createElement('span');
 _dateSpan.textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+' · ';
 const _verBtn=document.createElement('button');
 _verBtn.id='versionMenuBtn';
-_verBtn.textContent='v0.5.19';
+_verBtn.textContent='v0.5.26';
 _verBtn.style.cssText='font-family:inherit;font-size:inherit;background:none;border:none;cursor:pointer;padding:0;color:inherit;font-weight:600;text-decoration:underline dotted;';
 _dateLabelEl.appendChild(_dateSpan);
 _dateLabelEl.appendChild(_verBtn);
+
+// Dynamic header height — fixes blank-on-refresh
+const _header=document.querySelector('header');
+function _updateHeaderH(){
+  document.documentElement.style.setProperty('--header-h',_header.offsetHeight+'px');
+}
+if(window.ResizeObserver)new ResizeObserver(_updateHeaderH).observe(_header);
+_updateHeaderH();
+// Deuxième recalcul après fonts/images chargées
+window.addEventListener('load',_updateHeaderH);
 
 // ══════════════════════════════════════════════════════════
 // PAGE NAVIGATION
@@ -635,7 +646,13 @@ let sx=null,sy=null,swp=false;
 const mw=document.getElementById('mainWrap');
 mw.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;swp=false;},{passive:true});
 mw.addEventListener('touchmove',e=>{if(!sx)return;const dx=e.touches[0].clientX-sx,dy=e.touches[0].clientY-sy;if(!swp&&Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>10)swp=true;},{passive:true});
-mw.addEventListener('touchend',e=>{if(!sx||!swp){sx=null;return;}const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50)goToPage(currentPage+(dx<0?1:-1));sx=null;swp=false;},{passive:true});
+mw.addEventListener('touchend',e=>{
+  // Désactiver le swipe entre pages en vue kanban (scroll horizontal kanban)
+  if(!sx||!swp||actionsView==='kanban'){sx=null;swp=false;return;}
+  const dx=e.changedTouches[0].clientX-sx;
+  if(Math.abs(dx)>50)goToPage(currentPage+(dx<0?1:-1));
+  sx=null;swp=false;
+},{passive:true});
 
 // View toggle (liste / kanban)
 document.querySelectorAll('.vtog-btn').forEach(btn=>btn.addEventListener('click',()=>{
@@ -647,17 +664,20 @@ document.querySelectorAll('.vtog-btn').forEach(btn=>btn.addEventListener('click'
 // ── FILTERS ───────────────────────────────────────────────
 function renderFilters(){
   const inner=document.getElementById('filterInner');
-  if(currentPage===2){
-    inner.innerHTML=[['all','Tout'],['today',"Aujourd'hui"],['urgent','Urgent'],['someday','Un jour'],['done','Fait']]
-      .map(([f,l])=>`<button class="filter-btn${activeFilter===f?' active':''}" data-f="${f}">${l}</button>`).join('');
-  }else{
+  // Page 1 (Objectifs) et Page 2 (Actions) : Tout / Pro / Perso
+  if(currentPage===1){
     inner.innerHTML=[['all','Tout'],['pro','Pro'],['perso','Perso']]
       .map(([f,l])=>`<button class="filter-btn${activeObjFilter===f?' active':''}" data-f="${f}">${l}</button>`).join('');
+    inner.querySelectorAll('.filter-btn').forEach(btn=>btn.addEventListener('click',()=>{
+      activeObjFilter=btn.dataset.f;persistUI();renderFilters();render();
+    }));
+  }else if(currentPage===2){
+    inner.innerHTML=[['all','Tout'],['pro','Pro'],['perso','Perso']]
+      .map(([f,l])=>`<button class="filter-btn${activeFilter===f?' active':''}" data-f="${f}">${l}</button>`).join('');
+    inner.querySelectorAll('.filter-btn').forEach(btn=>btn.addEventListener('click',()=>{
+      activeFilter=btn.dataset.f;persistUI();renderFilters();render();
+    }));
   }
-  inner.querySelectorAll('.filter-btn').forEach(btn=>btn.addEventListener('click',()=>{
-    if(currentPage===2)activeFilter=btn.dataset.f;else activeObjFilter=btn.dataset.f;
-    persistUI();renderFilters();render();
-  }));
 }
 
 // ── FAB ──────────────────────────────────────────────────
@@ -949,7 +969,13 @@ function bindKanbanColDrop(colEl,targetStatus){
     e.preventDefault();
     const tid=kDragId||+e.dataTransfer.getData('text/plain');
     if(tid){const t=tasks.find(t=>t.id===tid);if(t){t.status=targetStatus;saveTasks(tasks);}}
-    clearKHL();kDragId=null;renderActions();
+    clearKHL();kDragId=null;
+    // Préserver la position de scroll du kanban
+    const pageEl=document.getElementById('pageActions');
+    const scrollTop=pageEl?pageEl.scrollTop:0;
+    const scrollLeft=pageEl?pageEl.scrollLeft:0;
+    renderActions();
+    if(pageEl){pageEl.scrollTop=scrollTop;pageEl.scrollLeft=scrollLeft;}
   });
 }
 
@@ -988,10 +1014,12 @@ function bindKanbanTouchDrag(el,taskId){
     if(dragging){
       const tc=e.changedTouches[0];
       const col=kanbanColUnder(tc.clientX,tc.clientY);
-      if(col&&kDragId){const t=tasks.find(t=>t.id===kDragId);if(t){t.status=col.dataset.kstatus;saveTasks(tasks);}}
+      if(col&&kDragId){
+        const t=tasks.find(t=>t.id===kDragId);
+        if(t&&t.status!==col.dataset.kstatus){t.status=col.dataset.kstatus;saveTasks(tasks);renderActions();}
+      }
     }
     dragging=false;kDragId=null;removeGhost();clearKHL();
-    if(dragging===false&&kDragId===null)renderActions();
   },{passive:true});
 
   el.addEventListener('touchcancel',()=>{
@@ -1210,6 +1238,7 @@ function bucketTaskHTML(t){
 function renderActions(){
   const listEl=document.getElementById('taskList');
   const kanbanEl=document.getElementById('kanbanWrap');
+  const pageActionsEl=document.getElementById('pageActions');
 
   // Stats
   const total=tasks.filter(t=>!t.done).length;
@@ -1224,23 +1253,25 @@ function renderActions(){
 
   if(actionsView==='kanban'){
     listEl.style.display='none';kanbanEl.style.display='block';
+    if(pageActionsEl){pageActionsEl.style.overflowX='auto';pageActionsEl.style.overflowY='auto';}
     renderKanban(kanbanEl);
   }else{
     listEl.style.display='block';kanbanEl.style.display='none';
+    if(pageActionsEl){pageActionsEl.style.overflowX='hidden';pageActionsEl.style.overflowY='auto';}
     renderList(listEl);
   }
 }
 
 function filterTask(t){
-  if(t.done)return activeFilter==='done';
-  switch(activeFilter){
-    case 'done':return false;
-    case 'urgent':return!!t.urgent;
-    case 'someday':return t.status==='un-jour';
-    case 'today':return t.due===todayStr||(t.due&&t.due<todayStr);
-    case 'all':return true;
-    default:return t.status!=='un-jour';
+  if(t.done)return activeFilter==='all';
+  // Pro/Perso filtre par contexte de l'objectif lié ou tag direct
+  if(activeFilter==='pro'||activeFilter==='perso'){
+    const obj=t.objectiveId?objectives.find(o=>o.id===t.objectiveId):null;
+    const ctx=obj?obj.context:(t.context||null);
+    return ctx===activeFilter;
   }
+  // 'all' : tout sauf fait
+  return !t.done;
 }
 
 function renderList(list){
@@ -1322,13 +1353,12 @@ function taskCardHTML(t){
 function renderKanban(wrap){
   function kanbanVisible(t){
     if(t.done)return false;
-    switch(activeFilter){
-      case 'urgent': return !!t.urgent;
-      case 'today':  return t.due===todayStr||(t.due&&t.due<todayStr);
-      case 'someday':return t.status==='un-jour';
-      case 'done':   return false;
-      default:       return true;
+    if(activeFilter==='pro'||activeFilter==='perso'){
+      const obj=t.objectiveId?objectives.find(o=>o.id===t.objectiveId):null;
+      const ctx=obj?obj.context:(t.context||null);
+      return ctx===activeFilter;
     }
+    return true; // 'all'
   }
   const kvis=tasks.filter(kanbanVisible);
   const cols=[
@@ -1450,16 +1480,16 @@ function kCardHTML(t, currentColKey){
 document.getElementById('taskModalCloseBtn').addEventListener('click', closeTaskModal);
 document.getElementById('objModalCloseBtn').addEventListener('click', closeObjModal);
 
-// Close move popup on outside click
+// Close move popup on outside click — use classList, consistent with .open CSS
 document.addEventListener('click', ()=>{
-  document.querySelectorAll('.kcard-move-popup').forEach(p=>p.style.display='none');
+  document.querySelectorAll('.kcard-move-popup.open').forEach(p=>p.classList.remove('open'));
 });
 
 // ── ESC ───────────────────────────────────────────────────
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
-  const openMove=document.querySelector('.kcard-move-popup[style*="flex"]');
-  if(openMove){openMove.style.display='none';return;}
+  const openMove=document.querySelector('.kcard-move-popup.open');
+  if(openMove){openMove.classList.remove('open');return;}
   if(document.getElementById('donePoupOverlay').classList.contains('open')){closeDonePopup();return;}
   if(document.getElementById('gistOverlay').classList.contains('open')){document.getElementById('gistOverlay').classList.remove('open');return;}
   if(overlayTask.classList.contains('open')){closeTaskModal();return;}
