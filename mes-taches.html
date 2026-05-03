@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Mes Tâches</title>
+<title>Mes Tâches v0.5.23</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -11,7 +11,7 @@
   --pro:#2D5BE3;--pro-soft:#EBF0FD;--perso:#D4622A;--perso-soft:#FDF0EA;
   --done:#5C8C5A;--urgent:#C23B3B;--overdue-soft:#FDE8E8;
   --today-c:#C27A2A;--today-soft:#FDF3E3;--someday:#6B8CA8;--someday-soft:#EBF2F8;
-  --waiting:#8A6A2A;--waiting-soft:#FBF4E3;--inprogress:#2D7A5B;--inprogress-soft:#E8F5EF;
+  --waiting:#8A6A2A;--waiting-soft:#FBF4E3;--planned:#5A6FCF;--planned-soft:#EAEFFD;--inprogress:#2D7A5B;--inprogress-soft:#E8F5EF;
   --obj:#7B4FBF;--obj-soft:#F2EDFC;--undef:#9E6B3A;--undef-soft:#FDF4EB;
   --radius:14px;--shadow:0 2px 12px rgba(26,23,20,.08);
 }
@@ -54,7 +54,7 @@ h1{font-family:'Instrument Serif',serif;font-size:26px;font-weight:400;letter-sp
 main{overflow:hidden;height:calc(100dvh - var(--header-h,130px));}
 .book{display:flex;width:300%;height:100%;transition:transform .35s cubic-bezier(.4,0,.2,1);will-change:transform;}
 .book.notrans{transition:none;}
-.page{width:calc(100%/3);flex-shrink:0;height:100%;}
+.page{width:calc(100%/3);flex-shrink:0;height:100%;overflow-y:auto;}
 
 /* ── PAGE INNER ── */
 .page-inner{max-width:680px;margin:0 auto;padding:16px 16px 120px;}
@@ -123,8 +123,30 @@ main{overflow:hidden;height:calc(100dvh - var(--header-h,130px));}
 .due-tag.upcoming{background:var(--bg);color:var(--ink-soft);border:1px solid var(--ink-faint);}
 .status-tag{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-family:'DM Mono',monospace;font-size:10px;font-weight:500;}
 .status-tag.en-cours{background:var(--inprogress-soft);color:var(--inprogress);}
-.status-tag.en-attente{background:var(--waiting-soft);color:var(--waiting);}
+.status-tag.en-attente-retour{background:var(--waiting-soft);color:var(--waiting);}
+.status-tag.planifie{background:var(--planned-soft);color:var(--planned);}
 .status-tag.un-jour{background:var(--someday-soft);color:var(--someday);}
+
+/* ── SOUS-ACTIONS ── */
+.subtask-section{margin-top:14px;}
+.subtask-section>label{font-size:11px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px;}
+.subtask-add-row{display:flex;gap:6px;margin-bottom:8px;}
+.subtask-add-row input{flex:1;padding:7px 10px;border-radius:10px;border:1.5px solid var(--ink-faint);background:var(--bg);font-family:'Figtree',sans-serif;font-size:13px;color:var(--ink);}
+.subtask-add-row input:focus{outline:none;border-color:var(--ink);}
+.subtask-add-btn{padding:7px 12px;border-radius:10px;border:1.5px solid var(--ink-faint);background:transparent;font-size:18px;cursor:pointer;color:var(--ink-soft);transition:all .15s;}
+.subtask-add-btn:hover{border-color:var(--ink);color:var(--ink);}
+.subtask-list{display:flex;flex-direction:column;gap:5px;margin-bottom:4px;}
+.subtask-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;background:var(--surface);border:1px solid var(--ink-faint);}
+.subtask-item.done-sub .subtask-label{text-decoration:line-through;color:var(--ink-faint);}
+.subtask-check{width:16px;height:16px;accent-color:var(--inprogress);cursor:pointer;flex-shrink:0;}
+.subtask-label{flex:1;font-size:13px;color:var(--ink);line-height:1.3;}
+.subtask-del{border:none;background:none;color:var(--ink-faint);cursor:pointer;font-size:16px;padding:0 3px;line-height:1;transition:color .15s;}
+.subtask-del:hover{color:var(--urgent);}
+.sub-prog{display:flex;align-items:center;gap:6px;margin-top:5px;font-size:11px;color:var(--ink-soft);}
+.sub-prog-label{font-weight:600;}
+.sub-prog-label .sp-n{color:var(--inprogress);}
+.sub-bar{flex:1;height:4px;border-radius:2px;background:var(--ink-faint);overflow:hidden;}
+.sub-bar-fill{height:100%;background:var(--inprogress);border-radius:2px;transition:width .3s;}
 
 /* ── OBJECTIVES PAGE — sticky Non Défini ── */
 .obj-page-wrap{display:flex;flex-direction:column;height:100%;}
@@ -177,7 +199,7 @@ main{overflow:hidden;height:calc(100dvh - var(--header-h,130px));}
 .drag-ghost{position:fixed;pointer-events:none;z-index:9999;background:var(--surface);border-radius:10px;padding:10px 14px;box-shadow:0 8px 24px rgba(26,23,20,.2);font-size:14px;font-weight:500;white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis;border-left:3px solid var(--obj);transform:translate(-50%,-50%) rotate(2deg) scale(1.04);opacity:.95;}
 
 /* ── KANBAN ── */
-.kanban-wrap{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 12px 120px;max-width:880px;margin:0 auto;align-items:start;}
+.kanban-wrap{display:grid;grid-template-columns:repeat(5,minmax(180px,1fr));gap:10px;padding:16px 12px 120px;max-width:1400px;margin:0 auto;align-items:start;overflow-x:auto;}
 .kanban-col{background:var(--bg);border-radius:var(--radius);overflow:hidden;}
 .gist-modal-overlay{position:fixed;inset:0;background:rgba(26,23,20,.5);z-index:400;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
 .gist-modal-overlay.open{opacity:1;pointer-events:all;}
@@ -303,11 +325,12 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .ctx-btn{padding:10px;border-radius:10px;border:1.5px solid var(--ink-faint);background:transparent;font-family:'Figtree',sans-serif;font-size:14px;font-weight:500;color:var(--ink-soft);cursor:pointer;transition:all .15s;text-align:center;}
 .ctx-btn[data-v=pro].sel{background:var(--pro-soft);border-color:var(--pro);color:var(--pro);}
 .ctx-btn[data-v=perso].sel{background:var(--perso-soft);border-color:var(--perso);color:var(--perso);}
-.status-group{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.status-group{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
 .status-pill{padding:8px 4px;border-radius:10px;border:1.5px solid var(--ink-faint);background:transparent;font-family:'Figtree',sans-serif;font-size:11px;font-weight:500;color:var(--ink-soft);cursor:pointer;transition:all .15s;text-align:center;line-height:1.3;}
 .status-pill[data-s=a-faire].sel{background:var(--bg);border-color:var(--ink);color:var(--ink);}
 .status-pill[data-s=en-cours].sel{background:var(--inprogress-soft);border-color:var(--inprogress);color:var(--inprogress);}
-.status-pill[data-s=en-attente].sel{background:var(--waiting-soft);border-color:var(--waiting);color:var(--waiting);}
+.status-pill[data-s=en-attente-retour].sel{background:var(--waiting-soft);border-color:var(--waiting);color:var(--waiting);}
+.status-pill[data-s=planifie].sel{background:var(--planned-soft);border-color:var(--planned);color:var(--planned);}
 .status-pill[data-s=un-jour].sel{background:var(--someday-soft);border-color:var(--someday);color:var(--someday);}
 .urgent-toggle{display:flex;align-items:center;gap:10px;cursor:pointer;}
 .toggle-track{width:42px;height:24px;border-radius:12px;background:var(--ink-faint);position:relative;transition:background .2s;flex-shrink:0;}
@@ -350,7 +373,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <div class="date-label" id="dateLabel"></div>
   </div>
   <div id="versionMenu" style="display:none;position:fixed;background:var(--surface);border-radius:14px;box-shadow:0 4px 24px rgba(26,23,20,.15);border:1px solid var(--ink-faint);padding:8px;z-index:500;min-width:180px;flex-direction:column;gap:2px;">
-      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--ink-soft);padding:4px 8px 8px;border-bottom:1px solid var(--ink-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Mes Tâches · v0.5.19</div>
+      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--ink-soft);padding:4px 8px 8px;border-bottom:1px solid var(--ink-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Mes Tâches · v0.5.23</div>
       <button class="vmenu-item" id="importBtn">⬆ Importer</button>
       <button class="vmenu-item" id="exportBtn">⬇ Exporter</button>
       <button class="vmenu-item raz" id="razBtn">🗑 Remise à zéro</button>
@@ -432,9 +455,18 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       <div class="status-group">
         <button class="status-pill sel" data-s="a-faire">À faire</button>
         <button class="status-pill" data-s="en-cours">En cours</button>
-        <button class="status-pill" data-s="en-attente">En attente</button>
-        <button class="status-pill" data-s="un-jour">Un jour…</button>
+        <button class="status-pill" data-s="en-attente-retour">Attente retour</button>
+        <button class="status-pill" data-s="planifie">Planifié</button>
+        <button class="status-pill" data-s="un-jour">Un jour</button>
       </div>
+    </div>
+    <div class="subtask-section">
+      <label>Sous-actions</label>
+      <div class="subtask-add-row">
+        <input type="text" id="inputSubtask" placeholder="Ajouter une sous-action… (Entrée pour valider)" autocomplete="off"/>
+        <button class="subtask-add-btn" id="addSubtaskBtn" title="Ajouter">+</button>
+      </div>
+      <div class="subtask-list" id="subtaskList"></div>
     </div>
     <div class="optional-toggle" id="optToggle"><span class="arrow">▶</span> Options</div>
     <div class="optional-fields" id="optFields">
@@ -527,6 +559,7 @@ function saveUI(d){localStorage.setItem(UI_KEY,JSON.stringify(d));}
 (()=>{const o=localStorage.getItem('mes-taches-v1');if(o&&!localStorage.getItem(TASKS_KEY))try{saveTasks(normT(JSON.parse(o)));}catch{}})();
 
 let tasks=loadTasks(), objectives=loadObjs();
+if(tasks.some(t=>t.status==='en-attente')){tasks=tasks.map(t=>({...t,status:t.status==='en-attente'?'en-attente-retour':t.status}));saveTasks(tasks);}
 const uiState=loadUI();
 
 // ── STATE ─────────────────────────────────────────────────
@@ -536,11 +569,12 @@ let activeObjFilter = uiState.objFilter||'all';
 let actionsView   = uiState.actionsView||'liste'; // 'liste' | 'kanban'
 let openBuckets   = new Set(uiState.openBuckets||['undef']);
 let selCtx=null, selObjCtx=null, isUrgent=false, selEmoji='🎯', selStatus='a-faire';
+let selSubtasks=[];
 let editingTaskId=null, editingObjId=null, optOpen=false;
 let presetObjId=null; // used when adding task from a bucket
 
 const EMOJIS=['🎯','🚀','💡','📈','🌱','🏆','📚','💪','🤝','✨','🔑','🌟'];
-const STATUSES={'a-faire':null,'en-cours':'⚡ En cours','en-attente':'⏳ En attente','un-jour':'☁️ Un jour'};
+const STATUSES={'a-faire':null,'en-cours':'⚡ En cours','en-attente-retour':'⏳ En attente retour','planifie':'🗓 Planifié','un-jour':'☁️ Un jour'};
 const todayStr=new Date().toISOString().slice(0,10);
 
 function dueInfo(due){
@@ -560,7 +594,7 @@ const _dateSpan=document.createElement('span');
 _dateSpan.textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+' · ';
 const _verBtn=document.createElement('button');
 _verBtn.id='versionMenuBtn';
-_verBtn.textContent='v0.5.19';
+_verBtn.textContent='v0.5.23';
 _verBtn.style.cssText='font-family:inherit;font-size:inherit;background:none;border:none;cursor:pointer;padding:0;color:inherit;font-weight:600;text-decoration:underline dotted;';
 _dateLabelEl.appendChild(_dateSpan);
 _dateLabelEl.appendChild(_verBtn);
@@ -657,6 +691,8 @@ function openTaskModal(taskId,forceObjId){
   document.getElementById('inputDue').value=t?(t.due||''):'';
 
   selStatus=t?(t.status||'a-faire'):'a-faire';
+  selSubtasks=t&&t.subtasks?JSON.parse(JSON.stringify(t.subtasks)):[];
+  renderSubtaskList();
   document.querySelectorAll('.status-pill').forEach(b=>b.classList.toggle('sel',b.dataset.s===selStatus));
   isUrgent=t?!!t.urgent:false;
   document.getElementById('urgentTrack').classList.toggle('on',isUrgent);
@@ -691,6 +727,40 @@ document.getElementById('deleteTaskBtn').addEventListener('click',()=>{
   saveTasks(tasks);closeTaskModal();showToast('Tâche supprimée');render();
 });
 
+
+// ── SOUS-ACTIONS ──────────────────────────────────────────
+function renderSubtaskList(){
+  const list=document.getElementById('subtaskList');
+  if(!list)return;
+  if(!selSubtasks.length){list.innerHTML='';return;}
+  list.innerHTML=selSubtasks.map((s,i)=>`
+    <div class="subtask-item ${s.done?'done-sub':''}" data-i="${i}">
+      <input class="subtask-check" type="checkbox" ${s.done?'checked':''} data-i="${i}" aria-label="Fait">
+      <span class="subtask-label">${esc(s.title)}</span>
+      <button class="subtask-del" data-i="${i}" title="Supprimer">×</button>
+    </div>`).join('');
+  list.querySelectorAll('.subtask-check').forEach(cb=>{
+    cb.addEventListener('change',()=>{selSubtasks[+cb.dataset.i].done=cb.checked;renderSubtaskList();});
+  });
+  list.querySelectorAll('.subtask-del').forEach(btn=>{
+    btn.addEventListener('click',()=>{selSubtasks.splice(+btn.dataset.i,1);renderSubtaskList();});
+  });
+}
+
+function addSubtask(){
+  const inp=document.getElementById('inputSubtask');
+  if(!inp)return;
+  const title=inp.value.trim();
+  if(!title)return;
+  selSubtasks.push({id:Date.now()+Math.random(),title,done:false});
+  inp.value='';
+  renderSubtaskList();
+  inp.focus();
+}
+
+document.getElementById('addSubtaskBtn')?.addEventListener('click',addSubtask);
+document.getElementById('inputSubtask')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addSubtask();}});
+
 function saveTask(){
   const title=document.getElementById('inputTitle').value.trim();
   if(!title){document.getElementById('inputTitle').focus();return;}
@@ -698,10 +768,10 @@ function saveTask(){
   const due=document.getElementById('inputDue').value||null;
   if(editingTaskId!==null){
     const t=tasks.find(t=>t.id===editingTaskId);
-    if(t){t.title=title;t.note=document.getElementById('inputNote').value.trim();t.urgent=isUrgent;t.status=selStatus;t.due=due;t.objectiveId=objVal?+objVal:null;t.updatedAt=new Date().toISOString();}
+    if(t){t.title=title;t.note=document.getElementById('inputNote').value.trim();t.urgent=isUrgent;t.status=selStatus;t.due=due;t.objectiveId=objVal?+objVal:null;t.subtasks=selSubtasks;t.updatedAt=new Date().toISOString();}
     saveTasks(tasks);closeTaskModal();showToast('Tâche mise à jour ✓');
   }else{
-    tasks.unshift({id:Date.now(),title,note:document.getElementById('inputNote').value.trim(),objectiveId:objVal?+objVal:null,urgent:isUrgent,status:selStatus,due,done:false,createdAt:new Date().toISOString()});
+    tasks.unshift({id:Date.now(),title,note:document.getElementById('inputNote').value.trim(),objectiveId:objVal?+objVal:null,urgent:isUrgent,status:selStatus,due,done:false,subtasks:selSubtasks,createdAt:new Date().toISOString()});
     saveTasks(tasks);closeTaskModal();showToast('Tâche ajoutée ✓');
   }
   render();
@@ -1164,9 +1234,10 @@ function renderList(list){
     const overdue=visible.filter(t=>t.due&&t.due<todayStr);
     const urgentT=visible.filter(t=>t.urgent&&!(t.due&&t.due<todayStr));
     const inprog=visible.filter(t=>t.status==='en-cours'&&!t.urgent&&!(t.due&&t.due<todayStr));
-    const waiting=visible.filter(t=>t.status==='en-attente'&&!t.urgent&&!(t.due&&t.due<todayStr));
+    const waiting=visible.filter(t=>t.status==='en-attente-retour'&&!t.urgent&&!(t.due&&t.due<todayStr));
+    const planned=visible.filter(t=>t.status==='planifie'&&!t.urgent&&!(t.due&&t.due<todayStr));
     // With due date (upcoming)
-    const withDue=visible.filter(t=>t.due&&t.due>=todayStr&&!t.urgent&&t.status!=='en-cours'&&t.status!=='en-attente');
+    const withDue=visible.filter(t=>t.due&&t.due>=todayStr&&!t.urgent&&t.status!=='en-cours'&&t.status!=='en-attente-retour'&&t.status!=='planifie');
     withDue.sort((a,b)=>a.due<b.due?-1:1);
     const undef=visible.filter(t=>(!t.status||t.status==='a-faire')&&!t.urgent&&!t.due&&!t.objectiveId);
     const normal=visible.filter(t=>(!t.status||t.status==='a-faire')&&!t.urgent&&!t.due&&!!t.objectiveId);
@@ -1176,7 +1247,8 @@ function renderList(list){
       {label:'🔴 En retard',items:overdue},
       {label:'⚡ Urgent',items:urgentT},
       {label:'▶ En cours',items:inprog},
-      {label:'⏳ En attente',items:waiting},
+      {label:'⏳ En attente retour',items:waiting},
+      {label:'🗓 Planifié',items:planned},
       {label:'📅 Avec date d\'échéance',items:withDue},
       {label:'· À définir',items:undef},
       {label:'· À faire',items:normal},
@@ -1202,6 +1274,9 @@ function taskCardHTML(t){
   const isOverdue=due&&due.cls==='overdue'&&!t.done;
   const statusLabel=t.status&&t.status!=='a-faire'?STATUSES[t.status]:null;
   const isUndef=!t.done&&!t.objectiveId;
+  const subs=t.subtasks&&t.subtasks.length?t.subtasks:null;
+  const subsDone=subs?subs.filter(s=>s.done).length:0;
+  const subsPct=subs?Math.round(subsDone/subs.length*100):0;
   return `<div class="task-card ${t.done?'done':''} ${isOverdue?'overdue':''}" data-id="${t.id}">
     <div class="check-wrap"><input class="check" type="checkbox" data-id="${t.id}" ${t.done?'checked':''} aria-label="Fait"></div>
     <div class="task-body" data-id="${t.id}">
@@ -1213,6 +1288,7 @@ function taskCardHTML(t){
         ${statusLabel?`<span class="status-tag ${t.status}">${statusLabel}</span>`:''}
         ${obj?`<span class="tag obj-tag">${obj.icon} ${esc(obj.title)}</span>`:(isUndef?`<span class="tag undef">À définir</span>`:'')}
       </div>
+      ${subs?`<div class="sub-prog"><span class="sub-prog-label"><span class="sp-n">${subsDone}</span>/${subs.length} sous-actions</span><div class="sub-bar"><div class="sub-bar-fill" style="width:${subsPct}%"></div></div></div>`:''}
     </div>
     <div class="card-actions"><button class="icon-btn edit-task-btn" data-id="${t.id}" title="Modifier">✎</button></div>
   </div>`;
@@ -1220,176 +1296,112 @@ function taskCardHTML(t){
 
 // ── KANBAN ────────────────────────────────────────────────
 function renderKanban(wrap){
-  // Only active tasks, not someday, not done
-  // Apply active filter to kanban
   function kanbanVisible(t){
     if(t.done)return false;
     switch(activeFilter){
-      case 'urgent':return!!t.urgent;
-      case 'today':return t.due===todayStr||(t.due&&t.due<todayStr);
+      case 'urgent': return !!t.urgent;
+      case 'today':  return t.due===todayStr||(t.due&&t.due<todayStr);
       case 'someday':return t.status==='un-jour';
-      case 'done':return false;
-      default:return true; // 'all'
+      case 'done':   return false;
+      default:       return true;
     }
   }
   const kvis=tasks.filter(kanbanVisible);
-  const todoItems=kvis.filter(t=>!t.status||t.status==='a-faire');
-  const somedayItems=kvis.filter(t=>t.status==='un-jour');
-  const inProgressItems=kvis.filter(t=>t.status==='en-cours');
-  const waitingItems=kvis.filter(t=>t.status==='en-attente');
-
-  // Sort: overdue+urgent first, then by due date
+  const cols=[
+    {key:'a-faire',           label:'À faire',        items:kvis.filter(t=>!t.status||t.status==='a-faire'),        moveTarget:'en-cours',          moveLabel:'→ En cours'},
+    {key:'en-cours',          label:'En cours',        items:kvis.filter(t=>t.status==='en-cours'),                  moveTarget:'en-attente-retour', moveLabel:'→ Attente retour'},
+    {key:'en-attente-retour', label:'Attente retour',  items:kvis.filter(t=>t.status==='en-attente-retour'),         moveTarget:'planifie',          moveLabel:'→ Planifié'},
+    {key:'planifie',          label:'Planifié',        items:kvis.filter(t=>t.status==='planifie'),                  moveTarget:'un-jour',           moveLabel:'→ Un jour'},
+    {key:'un-jour',           label:'☁️ Un jour',     items:kvis.filter(t=>t.status==='un-jour'),                   moveTarget:'a-faire',           moveLabel:'→ À faire'},
+  ];
   function sortK(arr){
     return [...arr].sort((a,b)=>{
       const aS=(a.urgent?4:0)+(a.due&&a.due<todayStr?2:0)+(a.due?1:0);
       const bS=(b.urgent?4:0)+(b.due&&b.due<todayStr?2:0)+(b.due?1:0);
       if(aS!==bS)return bS-aS;
       if(a.due&&b.due)return a.due<b.due?-1:1;
-      return 0;
+      if(a.due)return -1; if(b.due)return 1; return 0;
     });
   }
-
-  // Save scroll positions before re-render
-  const _kScrollPos={};
-  wrap.querySelectorAll('.kanban-col-body').forEach(el=>{if(el.id)_kScrollPos[el.id]=el.scrollTop;});
-
-  wrap.innerHTML=`<div class="kanban-wrap">
-    <div class="kanban-col" id="kcol-todo">
-      <div class="kanban-col-head">
-        <span class="kanban-col-title">À faire</span>
-        <span class="kanban-col-count">${todoItems.length}</span>
-      </div>
-      <div class="kanban-col-body" data-kstatus="a-faire" id="kbody-todo">
-        ${sortK(todoItems).map(t=>kCardHTML(t,'en-cours')).join('')}
-        ${!todoItems.length?'<div style="font-size:13px;color:var(--ink-faint);font-style:italic;padding:8px 4px">Aucune tâche</div>':''}
-      </div>
-      <div class="kanban-sub-head">
-        <span class="kanban-col-title" style="color:var(--someday)">☁️ Un jour</span>
-        <span class="kanban-col-count">${somedayItems.length}</span>
-      </div>
-      <div class="kanban-col-body kanban-someday" data-kstatus="un-jour" id="kbody-someday">
-        ${sortK(somedayItems).map(t=>kCardHTML(t,'a-faire')).join('')}
-        ${!somedayItems.length?'<div style="font-size:13px;color:var(--ink-faint);font-style:italic;padding:8px 4px">Aucune tâche</div>':''}
-      </div>
-    </div>
-    <div class="kanban-col" id="kcol-prog">
-      <div class="kanban-col-head">
-        <span class="kanban-col-title">En cours</span>
-        <span class="kanban-col-count">${inProgressItems.length}</span>
-      </div>
-      <div class="kanban-col-body" data-kstatus="en-cours" id="kbody-prog">
-        ${sortK(inProgressItems).map(t=>kCardHTML(t,'a-faire')).join('')}
-        ${!inProgressItems.length?'<div style="font-size:13px;color:var(--ink-faint);font-style:italic;padding:8px 4px">Aucune tâche</div>':''}
-      </div>
-      <div class="kanban-sub-head">
-        <span class="kanban-col-title" style="color:var(--waiting)">⏳ En attente</span>
-        <span class="kanban-col-count">${waitingItems.length}</span>
-      </div>
-      <div class="kanban-col-body kanban-waiting" data-kstatus="en-attente" id="kbody-waiting">
-        ${sortK(waitingItems).map(t=>kCardHTML(t,'en-cours')).join('')}
-        ${!waitingItems.length?'<div style="font-size:13px;color:var(--ink-faint);font-style:italic;padding:8px 4px">Aucune tâche</div>':''}
-      </div>
-    </div>
-  </div>`;
-
-  // Restore scroll positions
-  Object.entries(_kScrollPos||{}).forEach(([id,top])=>{
-    const el=document.getElementById(id);
-    if(el)el.scrollTop=top;
-  });
-
-  // Bind column drops
-  wrap.querySelectorAll('.kanban-col-body').forEach(col=>{
-    bindKanbanColDrop(col,col.dataset.kstatus);
-  });
-
-  // Bind card events
+  wrap.innerHTML=`<div class="kanban-wrap">${cols.map(col=>`
+    <div class="kanban-col">
+      <div class="kanban-col-head"><span class="kanban-col-title">${col.label}</span><span class="kanban-col-count">${col.items.length}</span></div>
+      <div class="kanban-col-body" data-kstatus="${col.key}">${
+        sortK(col.items).map(t=>kCardHTML(t,col.moveTarget,col.moveLabel)).join('')||
+        '<div style="font-size:13px;color:var(--ink-faint);font-style:italic;padding:8px 4px">Aucune tâche</div>'
+      }</div>
+    </div>`).join('')}</div>`;
+  wrap.querySelectorAll('.kanban-col-body').forEach(col=>bindKanbanColDrop(col,col.dataset.kstatus));
   wrap.querySelectorAll('.kcard').forEach(card=>{
     const tid=+card.dataset.id;
-    bindKanbanCardDrag(card,tid);
-    bindKanbanTouchDrag(card,tid);
+    bindKanbanCardDrag(card,tid); bindKanbanTouchDrag(card,tid);
     card.querySelector('.kcard-check')?.addEventListener('change',()=>toggleDone(tid));
     card.querySelector('.kcard-edit')?.addEventListener('click',e=>{e.stopPropagation();openTaskModal(tid);});
-    const moveBtn=card.querySelector('.kcard-move-btn');
     const movePopup=card.querySelector('.kcard-move-popup');
-    // Portal: move popup to body to escape overflow clipping
-    if(movePopup&&movePopup.parentNode!==document.body){
-      document.body.appendChild(movePopup);
-    }
-    // iOS: touchend fires click reliably
-    moveBtn?.addEventListener('touchend',e=>{
-      e.preventDefault();
-      e.stopPropagation();
-      moveBtn.click();
-    },{passive:false});
-    moveBtn?.addEventListener('click',e=>{
-      e.stopPropagation();
-      // close any other open popups
-      document.querySelectorAll('.kcard-move-popup').forEach(p=>{if(p!==movePopup)p.style.display='none';});
-      const wasOpen=movePopup.style.display==='flex';
-      movePopup.style.display='none';
-      if(wasOpen)return;
-      const btnR=moveBtn.getBoundingClientRect();
-      const vw=Math.min(window.innerWidth,window.visualViewport?.width||window.innerWidth);
-      const vh=Math.min(window.innerHeight,window.visualViewport?.height||window.innerHeight);
-      const popW=165, popH=190;
-      let left=btnR.right+6;
-      if(left+popW>vw-8)left=btnR.left-popW-6;
-      if(left<8)left=8;
-      let top=btnR.bottom;
-      if(top+popH>vh-8)top=btnR.top-popH-4;
-      if(top<8)top=8;
-      movePopup.style.left=left+'px';
-      movePopup.style.top=top+'px';
-      movePopup.style.display='flex';
-    });
-    movePopup.querySelectorAll('.kcard-move-opt').forEach(opt=>{
-      opt.style.touchAction='manipulation';
-      opt.addEventListener('touchend',e=>{e.preventDefault();opt.click();},{passive:false});
+    card.querySelectorAll('.kcard-move-opt').forEach(opt=>{
       opt.addEventListener('click',e=>{
         e.stopPropagation();
         const t=tasks.find(t=>t.id===tid);if(!t)return;
         t.status=opt.dataset.target;
-        movePopup.style.display='none';
+        if(movePopup)movePopup.style.display='none';
         saveTasks(tasks);renderActions();
       });
     });
-    movePopup.querySelector('.kcard-move-close')?.addEventListener('click',e=>{
-      e.stopPropagation();
-      movePopup.style.display='none';
+    const moveBtn=card.querySelector('.kcard-move-btn');
+    moveBtn?.addEventListener('click',e=>{
+      e.stopPropagation();if(!movePopup)return;
+      document.querySelectorAll('.kcard-move-popup').forEach(pp=>{if(pp!==movePopup)pp.style.display='none';});
+      if(movePopup.style.display==='flex'){movePopup.style.display='none';return;}
+      const r=moveBtn.getBoundingClientRect();
+      const vw=window.innerWidth,popW=170;
+      let left=r.right+6;if(left+popW>vw-8)left=r.left-popW-6;if(left<8)left=8;
+      movePopup.style.left=left+'px';
+      movePopup.style.top=(r.bottom+4)+'px';
+      movePopup.style.display='flex';
     });
+    movePopup?.querySelector('.kcard-move-close')?.addEventListener('click',e=>{e.stopPropagation();movePopup.style.display='none';});
   });
 }
 
-function kCardHTML(t,moveToStatus){
+function kCardHTML(t, moveTarget, moveLabel){
   const obj=t.objectiveId?objectives.find(o=>o.id===t.objectiveId):null;
   const due=dueInfo(t.due);
   const isOverdue=due&&due.cls==='overdue';
-  const isWaiting=t.status==='en-attente';
-  return `<div class="kcard ${isOverdue?'overdue':''} ${isWaiting?'waiting':''}" data-id="${t.id}">
+  const statusLabel=t.status&&t.status!=='a-faire'?STATUSES[t.status]:null;
+  const subs=t.subtasks&&t.subtasks.length?t.subtasks:null;
+  const subsDone=subs?subs.filter(s=>s.done).length:0;
+  const subsPct=subs?Math.round(subsDone/subs.length*100):0;
+  const allTargets=[
+    {v:'a-faire',          lb:'📋 À faire'},
+    {v:'en-cours',         lb:'▶ En cours'},
+    {v:'en-attente-retour',lb:'⏳ Attente retour'},
+    {v:'planifie',         lb:'🗓 Planifié'},
+    {v:'un-jour',          lb:'☁️ Un jour'},
+  ];
+  const optsHTML=allTargets.filter(o=>o.v!==(t.status||'a-faire'))
+    .map(o=>`<button class="kcard-move-opt" data-target="${o.v}" style="text-align:left;padding:6px 10px;border:none;background:none;cursor:pointer;font-size:13px;border-radius:8px;color:var(--ink);">${o.lb}</button>`).join('');
+  return `<div class="kcard ${isOverdue?'overdue':''} ${t.status==='en-attente-retour'?'waiting':''} ${t.status==='planifie'?'planned':''}" data-id="${t.id}">
     <div class="kcard-title">${esc(t.title)}</div>
+    ${subs?`<div class="sub-prog"><span class="sub-prog-label"><span class="sp-n">${subsDone}</span>/${subs.length} ✓</span><div class="sub-bar"><div class="sub-bar-fill" style="width:${subsPct}%"></div></div></div>`:''}
     <div class="kcard-meta">
       ${t.urgent?`<span class="tag urgent" style="font-size:9px;padding:1px 6px">⚡</span>`:''}
-      ${isWaiting?`<span class="status-tag en-attente">⏳ En attente</span>`:''}
+      ${statusLabel?`<span class="status-tag ${t.status}">${statusLabel}</span>`:''}
       ${due?`<span class="due-tag ${due.cls}">${due.label}</span>`:''}
       ${obj?`<span class="tag obj-tag" style="font-size:10px">${obj.icon} ${esc(obj.title)}</span>`:''}
     </div>
     <div class="kcard-actions">
       <input class="kcard-check" type="checkbox" ${t.done?'checked':''} aria-label="Fait">
       <div class="kcard-wrap">
-        <button class="kcard-move-btn" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">Bouger ▾</button>
-        <div class="kcard-move-popup">
+        <button class="kcard-move-btn" title="Déplacer" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">${moveLabel||'Bouger ▾'}</button>
+        <div class="kcard-move-popup" style="display:none;position:fixed;z-index:9999;flex-direction:column;background:var(--surface);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:8px 6px;min-width:160px;border:1px solid var(--ink-faint);">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:2px 4px 6px;border-bottom:1px solid var(--ink-faint);margin-bottom:4px;">
-            <span style="font-size:11px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.4px">Déplacer</span>
+            <span style="font-size:11px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.4px">Déplacer vers</span>
             <button class="kcard-move-close" style="border:none;background:none;font-size:16px;cursor:pointer;color:var(--ink-soft);padding:0 2px;line-height:1;">×</button>
           </div>
-          <button class="kcard-move-opt" data-target="a-faire">📋 À faire</button>
-          <button class="kcard-move-opt" data-target="en-cours">▶ En cours</button>
-          <button class="kcard-move-opt" data-target="en-attente">⏳ En attente</button>
-          <button class="kcard-move-opt" data-target="un-jour">☁️ Un jour</button>
+          ${optsHTML}
         </div>
       </div>
-      <button class="kcard-edit">✎</button>
+      <button class="kcard-edit" title="Modifier">✎</button>
     </div>
   </div>`;
 }
