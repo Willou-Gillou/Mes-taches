@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Mes Tâches v0.5.46</title>
+<title>Mes Tâches v0.5.52</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -203,7 +203,10 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
 .kanban-outer{display:flex;flex-direction:column;height:100%;min-height:0;}
 .kanban-header-bar{flex-shrink:0;overflow:hidden;background:var(--bg);z-index:20;}
 .kanban-header-inner{display:grid;grid-template-columns:repeat(5,minmax(200px,1fr));gap:10px;padding:10px 12px 0;}
-.kanban-col-head{padding:10px 14px;display:flex;align-items:center;gap:8px;background:var(--surface);border-radius:var(--radius) var(--radius) 0 0;border-bottom:2px solid var(--ink-faint);}
+.kanban-col-head{padding:10px 14px;display:flex;align-items:center;gap:8px;background:var(--surface);border-radius:var(--radius) var(--radius) 0 0;border-bottom:2px solid var(--ink-faint);user-select:none;}
+.kanban-col-head.col-drag-over{border-bottom-color:var(--obj);background:var(--obj-soft);}
+.kcol-drag-handle{color:var(--ink-faint);font-size:14px;cursor:grab;flex-shrink:0;}
+.kcol-drag-handle:active{cursor:grabbing;}
 .kanban-scroll{overflow-x:auto;overflow-y:auto;flex:1;}
 .kanban-wrap{display:grid;grid-template-columns:repeat(5,minmax(200px,1fr));gap:10px;padding:0 12px 120px;align-items:start;}
 .kanban-col{background:var(--bg);border-radius:0 0 var(--radius) var(--radius);}
@@ -265,7 +268,11 @@ main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
 .obj-picker-opt.selected{background:var(--obj-soft);color:var(--obj);}
 .obj-picker-icon{width:20px;height:20px;border-radius:4px;object-fit:cover;flex-shrink:0;}
 
-/* ── SOUS-ACTIONS POPUP ── */
+/* ── RECURRENCE ── */
+.recur-group{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+.recur-pill{padding:5px 12px;border-radius:20px;border:1.5px solid var(--ink-faint);background:transparent;font-family:'Figtree',sans-serif;font-size:12px;font-weight:500;color:var(--ink-soft);cursor:pointer;transition:all .15s;}
+.recur-pill.sel{background:var(--obj);border-color:var(--obj);color:#fff;}
+.recur-badge{display:inline-flex;align-items:center;gap:3px;font-family:'DM Mono',monospace;font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(99,91,255,.1);color:var(--obj);border:1px solid rgba(99,91,255,.25);white-space:nowrap;}
 .sub-counter-btn{display:inline-flex;align-items:center;gap:4px;background:none;border:1.5px solid var(--ink-faint);border-radius:20px;padding:2px 8px;font-family:'DM Mono',monospace;font-size:10px;color:var(--ink-soft);cursor:pointer;transition:all .15s;white-space:nowrap;}
 .sub-counter-btn:hover,.sub-counter-btn.open{border-color:var(--obj);color:var(--obj);background:var(--obj-soft);}
 .sub-counter-btn .sc-arrow{font-size:8px;transition:transform .15s;}
@@ -519,6 +526,23 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <div class="optional-fields" id="optFields">
       <div class="field"><label>Note</label><textarea id="inputNote" placeholder="Contexte, lien, détail…"></textarea></div>
       <div class="field"><label>Échéance</label><input type="date" id="inputDue"/></div>
+      <div class="field">
+        <label>Récurrence</label>
+        <div class="recur-group">
+          <button class="recur-pill sel" data-r="">Aucune</button>
+          <button class="recur-pill" data-r="daily">Quotidien</button>
+          <button class="recur-pill" data-r="weekly">Hebdo</button>
+          <button class="recur-pill" data-r="monthly">Mensuel</button>
+          <button class="recur-pill" data-r="quarterly">Trimestriel</button>
+          <button class="recur-pill" data-r="annual">Annuel</button>
+          <button class="recur-pill" data-r="custom">Perso</button>
+        </div>
+        <div id="recurCustomWrap" style="display:none;margin-top:8px;display:none;align-items:center;gap:8px;">
+          <span style="font-size:13px;color:var(--ink-soft);">Tous les</span>
+          <input type="number" id="recurCustomN" min="1" max="365" value="7" style="width:60px;padding:6px 8px;border-radius:8px;border:1.5px solid var(--ink-faint);font-size:14px;font-family:'Figtree',sans-serif;background:var(--bg);color:var(--ink);text-align:center;">
+          <span style="font-size:13px;color:var(--ink-soft);">jours</span>
+        </div>
+      </div>
       <div class="field"><label>Objectif lié</label>
         <div class="obj-picker" id="objPicker">
           <button type="button" class="obj-picker-btn" id="objPickerBtn">— Aucun objectif —</button>
@@ -701,6 +725,8 @@ let openBuckets   = new Set(uiState.openBuckets||['undef']);
 let selCtx=null, selObjCtx=null, isUrgent=false, selEmoji='🎯', selStatus='a-faire';
 let selSubtasks=[];
 let _selObjId=null;
+let selRecur=''; // '', 'daily', 'weekly', 'monthly', 'custom'
+let selRecurN=7;
 let editingTaskId=null, editingObjId=null, optOpen=false;
 let presetObjId=null; // used when adding task from a bucket
 
@@ -725,7 +751,7 @@ const _dateSpan=document.createElement('span');
 _dateSpan.textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+' · ';
 const _verBtn=document.createElement('button');
 _verBtn.id='versionMenuBtn';
-_verBtn.textContent='v0.5.46';
+_verBtn.textContent='v0.5.52';
 _verBtn.style.cssText='font-family:inherit;font-size:inherit;background:none;border:none;cursor:pointer;padding:0;color:inherit;font-weight:600;text-decoration:underline dotted;';
 _dateLabelEl.appendChild(_dateSpan);
 _dateLabelEl.appendChild(_verBtn);
@@ -795,8 +821,10 @@ mw.addEventListener('touchend',e=>{
 // View toggle (liste / kanban)
 document.querySelectorAll('.vtog-btn').forEach(btn=>btn.addEventListener('click',()=>{
   actionsView=btn.dataset.v;
+  // Si on passe en kanban avec le filtre 'done', revenir à 'all'
+  if(actionsView==='kanban'&&activeFilter==='done')activeFilter='all';
   document.querySelectorAll('.vtog-btn').forEach(b=>b.classList.toggle('active',b.dataset.v===actionsView));
-  persistUI();renderActions();
+  persistUI();renderFilters();renderActions();
 }));
 
 // ── FILTERS ───────────────────────────────────────────────
@@ -859,6 +887,17 @@ function openTaskModal(taskId,forceObjId){
   isUrgent=t?!!t.urgent:false;
   document.getElementById('urgentTrack').classList.toggle('on',isUrgent);
 
+  // ── Récurrence ──
+  selRecur=t?.recur||'';
+  selRecurN=t?.recurN||7;
+  document.querySelectorAll('.recur-pill').forEach(b=>{
+    b.classList.toggle('sel',b.dataset.r===selRecur);
+  });
+  const rcw=document.getElementById('recurCustomWrap');
+  if(rcw)rcw.style.display=selRecur==='custom'?'flex':'none';
+  const rcn=document.getElementById('recurCustomN');
+  if(rcn)rcn.value=selRecurN;
+
   // ── Obj picker ──
   _selObjId=t&&t.objectiveId?t.objectiveId:(forceObjId??presetObjId??null);
   function renderObjPicker(){
@@ -913,7 +952,7 @@ function openTaskModal(taskId,forceObjId){
   setTimeout(()=>document.addEventListener('click',_closeObjPicker,{once:true}),0);
 
   // Auto-open options if there's preset data or edit
-  optOpen=isEdit?!!(t.note||t.due||t.objectiveId||t.urgent):(_selObjId!=null);
+  optOpen=isEdit?!!(t.note||t.due||t.objectiveId||t.urgent||t.recur):(_selObjId!=null);
   document.getElementById('optToggle').classList.toggle('open',optOpen);
   document.getElementById('optFields').classList.toggle('open',optOpen);
 
@@ -997,6 +1036,20 @@ document.getElementById('inputSubtask')?.addEventListener('keydown',e=>{
   if(e.key==='Enter'){e.preventDefault();addSubtask();}
 });
 
+// ── RECURRENCE PILLS ──────────────────────────────────────
+document.querySelectorAll('.recur-pill').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.recur-pill').forEach(b=>b.classList.remove('sel'));
+    btn.classList.add('sel');
+    selRecur=btn.dataset.r;
+    const wrap=document.getElementById('recurCustomWrap');
+    if(wrap)wrap.style.display=selRecur==='custom'?'flex':'none';
+  });
+});
+document.getElementById('recurCustomN')?.addEventListener('input',function(){
+  selRecurN=Math.max(1,Math.min(365,+this.value||7));
+});
+
 function saveTask(){
   const title=document.getElementById('inputTitle').value.trim();
   if(!title){document.getElementById('inputTitle').focus();return;}
@@ -1004,10 +1057,10 @@ function saveTask(){
   const due=document.getElementById('inputDue').value||null;
   if(editingTaskId!==null){
     const t=tasks.find(t=>t.id===editingTaskId);
-    if(t){t.title=title;t.note=document.getElementById('inputNote').value.trim();t.urgent=isUrgent;t.status=selStatus;t.due=due;t.objectiveId=objVal?+objVal:null;t.subtasks=selSubtasks;t.updatedAt=new Date().toISOString();}
+    if(t){t.title=title;t.note=document.getElementById('inputNote').value.trim();t.urgent=isUrgent;t.status=selStatus;t.due=due;t.objectiveId=objVal?+objVal:null;t.subtasks=selSubtasks;t.recur=selRecur||null;t.recurN=selRecur==='custom'?selRecurN:null;t.updatedAt=new Date().toISOString();}
     saveTasks(tasks);closeTaskModal();showToast('Tâche mise à jour ✓');
   }else{
-    tasks.unshift({id:Date.now(),title,note:document.getElementById('inputNote').value.trim(),objectiveId:objVal?+objVal:null,urgent:isUrgent,status:selStatus,due,done:false,subtasks:selSubtasks,createdAt:new Date().toISOString()});
+    tasks.unshift({id:Date.now(),title,note:document.getElementById('inputNote').value.trim(),objectiveId:objVal?+objVal:null,urgent:isUrgent,status:selStatus,due,done:false,subtasks:selSubtasks,recur:selRecur||null,recurN:selRecur==='custom'?selRecurN:null,createdAt:new Date().toISOString()});
     saveTasks(tasks);closeTaskModal();showToast('Tâche ajoutée ✓');
   }
   render();
@@ -1088,9 +1141,48 @@ function saveObjective(){
   render();
 }
 
+// ── CALCUL PROCHAINE DATE ─────────────────────────────────
+function nextRecurDate(t){
+  // Partir d'aujourd'hui en heure locale (évite le bug UTC)
+  const d=new Date();
+  d.setHours(0,0,0,0);
+  if(t.recur==='daily')       d.setDate(d.getDate()+1);
+  else if(t.recur==='weekly')     d.setDate(d.getDate()+7);
+  else if(t.recur==='monthly')    d.setMonth(d.getMonth()+1);
+  else if(t.recur==='quarterly')  d.setMonth(d.getMonth()+3);
+  else if(t.recur==='annual')     d.setFullYear(d.getFullYear()+1);
+  else if(t.recur==='custom')     d.setDate(d.getDate()+(t.recurN||7));
+  // Formater en YYYY-MM-DD local (pas UTC)
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function recurLabel(t){
+  if(!t.recur)return null;
+  const map={daily:'🔄 Quotidien',weekly:'🔄 Hebdo',monthly:'🔄 Mensuel',quarterly:'🔄 Trimestriel',annual:'🔄 Annuel'};
+  if(map[t.recur])return map[t.recur];
+  if(t.recur==='custom')return `🔄 ${t.recurN||7}j`;
+  return '🔄';
+}
+
 function toggleDone(id){
   const t=tasks.find(t=>t.id===id);
-  if(t){t.done=!t.done;if(t.done)t.doneAt=new Date().toISOString();saveTasks(tasks);render();}
+  if(!t)return;
+  if(t.recur){
+    // Tâche récurrente : disparaît puis réapparaît à la prochaine échéance en statut Planifié
+    t.due=nextRecurDate(t);
+    t.status='planifie';
+    if(t.subtasks)t.subtasks=t.subtasks.map(s=>({...s,done:false}));
+    t.done=false;
+    saveTasks(tasks);
+    showToast(`🔄 Prochaine occurrence : ${new Date(t.due+'T00:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}`);
+    render();
+  }else{
+    t.done=!t.done;
+    if(t.done)t.doneAt=new Date().toISOString();
+    saveTasks(tasks);render();
+  }
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1533,6 +1625,7 @@ function bucketTaskHTML(t){
         <div class="bucket-task-meta">
           ${t.urgent?`<span style="font-size:12px">⚡</span>`:''}
           ${due&&!t.done?`<span class="due-tag ${due.cls}" style="font-size:9px">${isOverdue?'🔴 En retard':due.label}</span>`:''}
+      ${t.recur?`<span class="recur-badge">${recurLabel(t)}</span>`:''}
         </div>
       </div>
       ${subs?`<div style="margin-top:3px;">
@@ -1790,6 +1883,7 @@ function taskCardHTML(t){
         ${due&&!t.done?`<span class="due-tag ${due.cls}">${due.label}</span>`:''}
         ${stLabel?`<span class="status-tag ${t.status}">${stLabel}</span>`:''}
         ${obj?`<span class="tag obj-tag">${objIconHTML(obj.icon,'13px')} ${esc(obj.title)}</span>`:(isUndef?`<span class="tag undef">À définir</span>`:'')}
+        ${t.recur?`<span class="recur-badge">${recurLabel(t)}</span>`:''}
         ${subs?`<button class="sub-counter-btn" data-id="${t.id}"><span class="sc-arrow">▸</span> ${subsDone}/${subs.length} sous-actions</button>`:''}
       </div>
     </div>
@@ -1804,6 +1898,16 @@ function taskCardHTML(t){
   </div>`;
 }
 
+// ── KANBAN COLUMN ORDER ───────────────────────────────────
+const KANBAN_COL_ORDER_KEY='mes-taches-kanban-col-order';
+const DEFAULT_COL_ORDER=['a-faire','planifie','en-cours','en-attente-retour','un-jour'];
+let kanbanColOrder=[...DEFAULT_COL_ORDER];
+try{
+  const saved=localStorage.getItem(KANBAN_COL_ORDER_KEY);
+  if(saved){const p=JSON.parse(saved);if(Array.isArray(p)&&p.length===5)kanbanColOrder=p;}
+}catch(e){}
+function saveColOrder(){localStorage.setItem(KANBAN_COL_ORDER_KEY,JSON.stringify(kanbanColOrder));}
+
 // ── KANBAN ────────────────────────────────────────────────
 function renderKanban(wrap){
   function kanbanVisible(t){
@@ -1816,13 +1920,15 @@ function renderKanban(wrap){
     return true; // 'all'
   }
   const kvis=tasks.filter(kanbanVisible);
-  const cols=[
-    {key:'a-faire',           label:'À faire',       items:kvis.filter(t=>!t.status||t.status==='a-faire'),        moveLabel:'→ Planifié'},
-    {key:'planifie',          label:'Planifié',       items:kvis.filter(t=>t.status==='planifie'),                  moveLabel:'→ En cours'},
-    {key:'en-cours',          label:'En cours',       items:kvis.filter(t=>t.status==='en-cours'),                  moveLabel:'→ Attente retour'},
-    {key:'en-attente-retour', label:'Attente retour', items:kvis.filter(t=>t.status==='en-attente-retour'),         moveLabel:'→ Un jour'},
-    {key:'un-jour',           label:'☁️ Un jour',    items:kvis.filter(t=>t.status==='un-jour'),                   moveLabel:'→ À faire'},
+  const ALL_COLS=[
+    {key:'a-faire',           label:'À faire',       items:kvis.filter(t=>!t.status||t.status==='a-faire')},
+    {key:'planifie',          label:'Planifié',       items:kvis.filter(t=>t.status==='planifie')},
+    {key:'en-cours',          label:'En cours',       items:kvis.filter(t=>t.status==='en-cours')},
+    {key:'en-attente-retour', label:'Attente retour', items:kvis.filter(t=>t.status==='en-attente-retour')},
+    {key:'un-jour',           label:'☁️ Un jour',    items:kvis.filter(t=>t.status==='un-jour')},
   ];
+  // Appliquer l'ordre sauvegardé
+  const cols=kanbanColOrder.map(k=>ALL_COLS.find(c=>c.key===k)).filter(Boolean);
   function sortK(arr){
     return [...arr].sort((a,b)=>{
       const aS=(a.urgent?4:0)+(a.due&&a.due<todayStr?2:0)+(a.due?1:0);
@@ -1833,14 +1939,15 @@ function renderKanban(wrap){
     });
   }
   const headerBarHTML=`<div class="kanban-header-bar"><div class="kanban-header-inner" id="kanbanHeaderInner">${cols.map(col=>`
-    <div class="kanban-col-head">
+    <div class="kanban-col-head" data-colkey="${col.key}" draggable="true" style="cursor:grab;">
+      <span class="kcol-drag-handle" title="Réorganiser">⠿</span>
       <span class="kanban-col-title">${col.label}</span>
       <span class="kanban-col-count">${col.items.length}</span>
     </div>`).join('')}</div></div>`;
 
   const bodiesHTML=`<div class="kanban-scroll" id="kanbanScroll"><div class="kanban-wrap">${cols.map(col=>{
     const sorted=sortK(col.items);
-    return `<div class="kanban-col">
+    return `<div class="kanban-col" data-colkey="${col.key}">
       <div class="kanban-col-body" data-kstatus="${col.key}">${
         sorted.map(t=>kCardHTML(t,col.key,true)).join('')||
         '<div style="font-size:13px;color:var(--ink-faint);font-style:italic;padding:8px 4px">Aucune tâche</div>'
@@ -1858,6 +1965,41 @@ function renderKanban(wrap){
       headerInner.style.transform=`translateX(${-scrollEl.scrollLeft}px)`;
     },{passive:true});
   }
+
+  // ── DRAG & DROP des colonnes (depuis le header) ──────────
+  let dragColKey=null;
+  wrap.querySelectorAll('.kanban-col-head').forEach(head=>{
+    head.addEventListener('dragstart',e=>{
+      dragColKey=head.dataset.colkey;
+      head.style.opacity='.4';
+      e.dataTransfer.effectAllowed='move';
+    });
+    head.addEventListener('dragend',()=>{
+      head.style.opacity='';
+      wrap.querySelectorAll('.kanban-col-head').forEach(h=>h.classList.remove('col-drag-over'));
+    });
+    head.addEventListener('dragover',e=>{
+      e.preventDefault();
+      if(dragColKey&&dragColKey!==head.dataset.colkey){
+        wrap.querySelectorAll('.kanban-col-head').forEach(h=>h.classList.remove('col-drag-over'));
+        head.classList.add('col-drag-over');
+      }
+    });
+    head.addEventListener('dragleave',()=>head.classList.remove('col-drag-over'));
+    head.addEventListener('drop',e=>{
+      e.preventDefault();
+      head.classList.remove('col-drag-over');
+      const from=dragColKey, to=head.dataset.colkey;
+      if(!from||from===to){dragColKey=null;return;}
+      const fi=kanbanColOrder.indexOf(from), ti=kanbanColOrder.indexOf(to);
+      if(fi<0||ti<0){dragColKey=null;return;}
+      kanbanColOrder.splice(fi,1);
+      kanbanColOrder.splice(ti,0,from);
+      saveColOrder();
+      dragColKey=null;
+      renderActions(); // re-render avec nouvel ordre
+    });
+  });
 
   wrap.querySelectorAll('.kanban-col-body').forEach(col=>bindKanbanColDrop(col,col.dataset.kstatus));
   wrap.querySelectorAll('.kcard').forEach(card=>{
@@ -1970,6 +2112,7 @@ function kCardHTML(t, currentColKey, isFirstWithSubs=false){
         <div class="kcard-meta">
           ${t.urgent?`<span class="tag urgent" style="font-size:9px;padding:1px 6px">⚡</span>`:''}
           ${due?`<span class="due-tag ${due.cls}">${due.label}</span>`:''}
+          ${t.recur?`<span class="recur-badge">${recurLabel(t)}</span>`:''}
           ${obj?`<span class="tag obj-tag" style="font-size:10px">${objIconHTML(obj.icon,'13px')} ${esc(obj.title)}</span>`:''}
         </div>
       </div>
