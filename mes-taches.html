@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Mes Tâches v0.5.52</title>
+<title>Mes Tâches v0.5.54</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -751,7 +751,7 @@ const _dateSpan=document.createElement('span');
 _dateSpan.textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+' · ';
 const _verBtn=document.createElement('button');
 _verBtn.id='versionMenuBtn';
-_verBtn.textContent='v0.5.52';
+_verBtn.textContent='v0.5.54';
 _verBtn.style.cssText='font-family:inherit;font-size:inherit;background:none;border:none;cursor:pointer;padding:0;color:inherit;font-weight:600;text-decoration:underline dotted;';
 _dateLabelEl.appendChild(_dateSpan);
 _dateLabelEl.appendChild(_verBtn);
@@ -1508,7 +1508,8 @@ function renderObjectives(){
         openIconPicker(+el.dataset.oid);
       });
     });
-    container.querySelectorAll('.bt-edit').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();openTaskModal(+btn.dataset.tid);}));
+    container.querySelectorAll('.bt-edit:not(.bt-dup)').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();openTaskModal(+btn.dataset.tid);}));
+    container.querySelectorAll('.bt-dup').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();duplicateTask(+btn.dataset.tid);}));
     container.querySelectorAll('.bt-check').forEach(cb=>cb.addEventListener('change',()=>toggleDone(+cb.dataset.id)));
     container.querySelectorAll('.show-done-btn').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();const oid=btn.dataset.objId;openDonePopup(oid==='null'?null:+oid);}));
     container.querySelectorAll('.bucket-add-btn').forEach(btn=>{
@@ -1639,6 +1640,7 @@ function bucketTaskHTML(t){
         </div>
       </div>`:''}
     </div>
+    <button class="bt-edit bt-dup" data-tid="${t.id}" title="Dupliquer">⧉</button>
     <button class="bt-edit" data-tid="${t.id}" title="Modifier">✎</button>
   </div>`;
 }
@@ -1743,6 +1745,29 @@ document.getElementById('iconPickerCancel').addEventListener('click',closeIconPi
 document.getElementById('iconPickerOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('iconPickerOverlay'))closeIconPicker();});
 
 // ── PROMOUVOIR UNE SOUS-TÂCHE EN TÂCHE ───────────────────
+// ── DUPLICATION DE TÂCHE ─────────────────────────────────
+function duplicateTask(id){
+  const src=tasks.find(t=>t.id===id);
+  if(!src)return;
+  const copy={
+    ...src,
+    id:Date.now(),
+    title:src.title+' (copie)',
+    done:false,
+    doneAt:null,
+    createdAt:new Date().toISOString(),
+    updatedAt:new Date().toISOString(),
+    // Copie profonde des sous-tâches avec done=false
+    subtasks:(src.subtasks||[]).map(s=>({...s,done:false})),
+  };
+  // Insérer juste après la tâche source
+  const idx=tasks.findIndex(t=>t.id===id);
+  tasks.splice(idx+1,0,copy);
+  saveTasks(tasks);
+  render();
+  showToast('Tâche dupliquée ✓');
+}
+
 function promoteSubtask(tid, si){
   const parent=tasks.find(t=>t.id===tid);
   if(!parent||!parent.subtasks||parent.subtasks[si]==null)return;
@@ -1814,6 +1839,7 @@ function renderList(list){
   list.innerHTML=html;
   list.querySelectorAll('.check').forEach(cb=>cb.addEventListener('change',()=>toggleDone(+cb.dataset.id)));
   list.querySelectorAll('.edit-task-btn').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();openTaskModal(+btn.dataset.id);}));
+  list.querySelectorAll('.dup-task-btn').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();duplicateTask(+btn.dataset.id);}));
   list.querySelectorAll('.task-body').forEach(body=>body.addEventListener('click',()=>openTaskModal(+body.dataset.id)));
 
   // Sous-actions : compteur cliquable (popup hors task-body, cherché dans la carte)
@@ -1887,7 +1913,10 @@ function taskCardHTML(t){
         ${subs?`<button class="sub-counter-btn" data-id="${t.id}"><span class="sc-arrow">▸</span> ${subsDone}/${subs.length} sous-actions</button>`:''}
       </div>
     </div>
-    <div class="card-actions"><button class="icon-btn edit-task-btn" data-id="${t.id}" title="Modifier">✎</button></div>
+    <div class="card-actions">
+      <button class="icon-btn dup-task-btn" data-id="${t.id}" title="Dupliquer">⧉</button>
+      <button class="icon-btn edit-task-btn" data-id="${t.id}" title="Modifier">✎</button>
+    </div>
     ${subs?`<div class="sub-popup task-sub-popup" data-tid="${t.id}" style="width:100%;padding:0 16px 4px;">${
       subs.map((s,i)=>`<div class="sub-popup-item">
         <input class="sub-popup-check" type="checkbox" ${s.done?'checked':''} data-tid="${t.id}" data-si="${i}" aria-label="${esc(s.title)}">
@@ -2022,6 +2051,12 @@ function renderKanban(wrap){
       openTaskModal(tid);
     });
 
+    // ── Bouton dupliquer ──
+    card.querySelector('.kcard-dup')?.addEventListener('click',e=>{
+      e.stopPropagation();e.preventDefault();
+      duplicateTask(tid);
+    });
+
     // ── Compteur sous-actions ──
     const subBtn=card.querySelector('.sub-counter-btn');
     const subPopup=card.querySelector('.sub-popup');
@@ -2118,6 +2153,7 @@ function kCardHTML(t, currentColKey, isFirstWithSubs=false){
       </div>
       <div class="kcard-right">
         <button class="kcard-edit" title="Modifier" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;">✎</button>
+        <button class="kcard-dup" title="Dupliquer" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:none;border:none;color:var(--ink-faint);font-size:13px;cursor:pointer;padding:2px 4px;border-radius:4px;">⧉</button>
         <button class="kcard-move-btn" style="touch-action:manipulation;-webkit-tap-highlight-color:transparent;padding:4px 8px;border-radius:8px;border:1.5px solid var(--ink-faint);background:transparent;font-size:11px;cursor:pointer;color:var(--ink-soft);">↕</button>
       </div>
     </div>
