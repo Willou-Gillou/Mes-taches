@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Mes Tâches v0.5.54</title>
+<title>Mes Tâches v0.5.55</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -751,7 +751,7 @@ const _dateSpan=document.createElement('span');
 _dateSpan.textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+' · ';
 const _verBtn=document.createElement('button');
 _verBtn.id='versionMenuBtn';
-_verBtn.textContent='v0.5.54';
+_verBtn.textContent='v0.5.55';
 _verBtn.style.cssText='font-family:inherit;font-size:inherit;background:none;border:none;cursor:pointer;padding:0;color:inherit;font-weight:600;text-decoration:underline dotted;';
 _dateLabelEl.appendChild(_dateSpan);
 _dateLabelEl.appendChild(_verBtn);
@@ -1404,8 +1404,12 @@ function renderDashboard(){
     if(undef>5)html+=`<div style="font-size:12px;color:var(--ink-faint);font-family:'DM Mono',monospace;padding:4px 2px">+ ${undef-5} autre${undef-5>1?'s':''}</div>`;
   }
 
-  // Focus du jour : urgent + en retard + aujourd'hui
-  const focus=tasks.filter(t=>!t.done&&(t.urgent||(t.due&&t.due<=todayStr))).slice(0,5);
+  // Focus du jour : Urgents d'abord, puis échéances dans les 7 prochains jours (plus court → plus loin)
+  const in7days=new Date(); in7days.setDate(in7days.getDate()+7);
+  const in7Str=in7days.toISOString().slice(0,10);
+  const urgentFocus=tasks.filter(t=>!t.done&&t.urgent).sort((a,b)=>a.due&&b.due?a.due<b.due?-1:1:a.due?-1:1);
+  const upcomingFocus=tasks.filter(t=>!t.done&&!t.urgent&&t.due&&t.due<=in7Str).sort((a,b)=>a.due<b.due?-1:1);
+  const focus=[...urgentFocus,...upcomingFocus];
   if(focus.length){
     html+=`<div class="dash-section-title">Focus du jour</div>`;
     focus.forEach(t=>{html+=dashTaskHTML(t);});
@@ -1802,28 +1806,32 @@ function renderList(list){
   const firstWithSubsId=visible.find(t=>t.subtasks&&t.subtasks.length)?.id??null;
 
   let html='';
-  if(activeFilter==='all'){
-    const overdue=visible.filter(t=>t.due&&t.due<todayStr);
-    const urgentT=visible.filter(t=>t.urgent&&!(t.due&&t.due<todayStr));
-    const inprog=visible.filter(t=>t.status==='en-cours'&&!t.urgent&&!(t.due&&t.due<todayStr));
-    const waiting=visible.filter(t=>t.status==='en-attente-retour'&&!t.urgent&&!(t.due&&t.due<todayStr));
-    const planned=visible.filter(t=>t.status==='planifie'&&!t.urgent&&!(t.due&&t.due<todayStr));
-    const withDue=visible.filter(t=>t.due&&t.due>=todayStr&&!t.urgent&&t.status!=='en-cours'&&t.status!=='en-attente-retour'&&t.status!=='planifie');
-    withDue.sort((a,b)=>a.due<b.due?-1:1);
-    const undef=visible.filter(t=>(!t.status||t.status==='a-faire')&&!t.urgent&&!t.due&&!t.objectiveId);
-    const normal=visible.filter(t=>(!t.status||t.status==='a-faire')&&!t.urgent&&!t.due&&!!t.objectiveId);
+  if(activeFilter==='all'||activeFilter==='pro'||activeFilter==='perso'){
+    const in7=new Date();in7.setDate(in7.getDate()+7);
+    const in7Str=[in7.getFullYear(),String(in7.getMonth()+1).padStart(2,'0'),String(in7.getDate()).padStart(2,'0')].join('-');
+
+    const urgentT=visible.filter(t=>t.urgent);
+    urgentT.sort((a,b)=>a.due&&b.due?a.due<b.due?-1:1:a.due?-1:1);
+
+    const upcoming=visible.filter(t=>!t.urgent&&t.due&&t.due<=in7Str);
+    upcoming.sort((a,b)=>a.due<b.due?-1:1);
+
+    const rest=visible.filter(t=>!t.urgent&&!(t.due&&t.due<=in7Str));
+    const afaire=rest.filter(t=>!t.status||t.status==='a-faire');
+    const encours=rest.filter(t=>t.status==='en-cours');
+    const attente=rest.filter(t=>t.status==='en-attente-retour');
+    const planifie=rest.filter(t=>t.status==='planifie');
+    const unjour=rest.filter(t=>t.status==='un-jour');
     const done5=tasks.filter(t=>t.done).slice(0,5);
 
     const groups=[
-      {label:'🔴 En retard',items:overdue},
       {label:'⚡ Urgent',items:urgentT},
-      {label:'🗓 Planifié',items:planned},
-      {label:'▶ En cours',items:inprog},
-      {label:'⏳ En attente retour',items:waiting},
-      {label:'📅 Avec date d\'échéance',items:withDue},
-      {label:'· À définir',items:undef},
-      {label:'· À faire',items:normal},
-      {label:'☁️ Un jour',items:visible.filter(t=>t.status==='un-jour')},
+      {label:'📅 Échéances à venir (7j)',items:upcoming},
+      {label:'· À faire',items:afaire},
+      {label:'▶ En cours',items:encours},
+      {label:'⏳ En attente retour',items:attente},
+      {label:'🗓 Planifié',items:planifie},
+      {label:'☁️ Un jour',items:unjour},
     ];
     groups.forEach(g=>{
       if(!g.items.length)return;
@@ -1949,15 +1957,13 @@ function renderKanban(wrap){
     return true; // 'all'
   }
   const kvis=tasks.filter(kanbanVisible);
-  const ALL_COLS=[
+  const cols=[
     {key:'a-faire',           label:'À faire',       items:kvis.filter(t=>!t.status||t.status==='a-faire')},
-    {key:'planifie',          label:'Planifié',       items:kvis.filter(t=>t.status==='planifie')},
     {key:'en-cours',          label:'En cours',       items:kvis.filter(t=>t.status==='en-cours')},
     {key:'en-attente-retour', label:'Attente retour', items:kvis.filter(t=>t.status==='en-attente-retour')},
+    {key:'planifie',          label:'Planifié',       items:kvis.filter(t=>t.status==='planifie')},
     {key:'un-jour',           label:'☁️ Un jour',    items:kvis.filter(t=>t.status==='un-jour')},
   ];
-  // Appliquer l'ordre sauvegardé
-  const cols=kanbanColOrder.map(k=>ALL_COLS.find(c=>c.key===k)).filter(Boolean);
   function sortK(arr){
     return [...arr].sort((a,b)=>{
       const aS=(a.urgent?4:0)+(a.due&&a.due<todayStr?2:0)+(a.due?1:0);
@@ -1968,8 +1974,7 @@ function renderKanban(wrap){
     });
   }
   const headerBarHTML=`<div class="kanban-header-bar"><div class="kanban-header-inner" id="kanbanHeaderInner">${cols.map(col=>`
-    <div class="kanban-col-head" data-colkey="${col.key}" draggable="true" style="cursor:grab;">
-      <span class="kcol-drag-handle" title="Réorganiser">⠿</span>
+    <div class="kanban-col-head" data-colkey="${col.key}">
       <span class="kanban-col-title">${col.label}</span>
       <span class="kanban-col-count">${col.items.length}</span>
     </div>`).join('')}</div></div>`;
@@ -1994,41 +1999,6 @@ function renderKanban(wrap){
       headerInner.style.transform=`translateX(${-scrollEl.scrollLeft}px)`;
     },{passive:true});
   }
-
-  // ── DRAG & DROP des colonnes (depuis le header) ──────────
-  let dragColKey=null;
-  wrap.querySelectorAll('.kanban-col-head').forEach(head=>{
-    head.addEventListener('dragstart',e=>{
-      dragColKey=head.dataset.colkey;
-      head.style.opacity='.4';
-      e.dataTransfer.effectAllowed='move';
-    });
-    head.addEventListener('dragend',()=>{
-      head.style.opacity='';
-      wrap.querySelectorAll('.kanban-col-head').forEach(h=>h.classList.remove('col-drag-over'));
-    });
-    head.addEventListener('dragover',e=>{
-      e.preventDefault();
-      if(dragColKey&&dragColKey!==head.dataset.colkey){
-        wrap.querySelectorAll('.kanban-col-head').forEach(h=>h.classList.remove('col-drag-over'));
-        head.classList.add('col-drag-over');
-      }
-    });
-    head.addEventListener('dragleave',()=>head.classList.remove('col-drag-over'));
-    head.addEventListener('drop',e=>{
-      e.preventDefault();
-      head.classList.remove('col-drag-over');
-      const from=dragColKey, to=head.dataset.colkey;
-      if(!from||from===to){dragColKey=null;return;}
-      const fi=kanbanColOrder.indexOf(from), ti=kanbanColOrder.indexOf(to);
-      if(fi<0||ti<0){dragColKey=null;return;}
-      kanbanColOrder.splice(fi,1);
-      kanbanColOrder.splice(ti,0,from);
-      saveColOrder();
-      dragColKey=null;
-      renderActions(); // re-render avec nouvel ordre
-    });
-  });
 
   wrap.querySelectorAll('.kanban-col-body').forEach(col=>bindKanbanColDrop(col,col.dataset.kstatus));
   wrap.querySelectorAll('.kcard').forEach(card=>{
