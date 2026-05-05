@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Mes Calendriers Santé v4.02</title>
+<title>Mes Calendriers Santé v4.1</title>
 <style>
   :root {
     --bg:#f4f6fa;--text:#222;--muted:#666;--accent:#007bff;
@@ -251,7 +251,7 @@
 <div class="drawer-overlay" id="drawerOverlay"></div>
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true">
   <div class="drawer-header">
-    <span class="drawer-header-title">Mes Calendriers Santé v4.02</span>
+    <span class="drawer-header-title" id="drawerAppTitle">Mes Calendriers Santé</span>
     <button class="drawer-close-btn" id="drawerCloseBtn">&#10005;</button>
   </div>
   <div class="drawer-body" id="drawerBody"></div>
@@ -328,20 +328,21 @@
 </div>
 
 
-<!-- JSONBIN SETUP -->
+<!-- GIST SETUP -->
 <div class="jb-backdrop" id="jbSetupBackdrop"></div>
 <div class="jb-modal" id="jbSetupModal">
   <div class="jb-card">
-    <div class="jb-title">Configuration Cloud (JSONBin)</div>
-    <div class="jb-desc">Pour activer la sauvegarde, créez un compte gratuit sur JSONBin.io et renseignez vos identifiants ci-dessous.</div>
+    <div class="jb-title">⚙️ Configuration Cloud (GitHub Gist)</div>
+    <div class="jb-desc">Créez un <strong>Gist secret</strong> sur <a href="https://gist.github.com" target="_blank" style="color:var(--accent)">gist.github.com</a> avec un fichier nommé <code>suivi_sante.json</code>, puis générez un <strong>Personal Access Token</strong> (scope : <code>gist</code>) sur GitHub → Settings → Developer settings.</div>
     <div>
-      <div class="jb-label">Master API Key ($2...)</div>
-      <input type="password" id="jbApiKeyInp" class="jb-input" placeholder="Collez votre clé API ici">
+      <div class="jb-label">Personal Access Token (ghp_...)</div>
+      <input type="password" id="jbApiKeyInp" class="jb-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
     </div>
     <div>
-      <div class="jb-label">Bin ID</div>
-      <input type="text" id="jbBinIdInp" class="jb-input" placeholder="ID du Bin (ex: 64a1b...)">
+      <div class="jb-label">Gist ID (32 caractères hex dans l'URL du Gist)</div>
+      <input type="text" id="jbBinIdInp" class="jb-input" placeholder="ex: a1b2c3d4e5f6...">
     </div>
+    <div id="jbSetupStatus" style="font-size:12px;color:var(--muted);min-height:16px;"></div>
     <div class="jb-actions">
       <button class="btn" id="jbSetupCancel">Annuler</button>
       <button class="btn btn-primary" id="jbSetupSave">Enregistrer</button>
@@ -349,13 +350,13 @@
   </div>
 </div>
 
-<!-- JSONBIN RESTORE LIST -->
+<!-- GIST RESTORE LIST -->
 <div class="jb-backdrop" id="jbRestoreBackdrop"></div>
 <div class="jb-modal" id="jbRestoreModal">
   <div class="jb-card">
     <div class="jb-title">Restaurer une sauvegarde</div>
     <div class="jb-desc">Choisissez une sauvegarde à restaurer. Vos données actuelles seront remplacées.</div>
-    <div id="jbLoader" class="loader">Chargement depuis le Cloud...</div>
+    <div id="jbLoader" class="loader">Chargement depuis GitHub Gist...</div>
     <div class="jb-list" id="jbRestoreList"></div>
     <div class="jb-actions">
       <button class="btn" id="jbRestoreCancel">Annuler</button>
@@ -366,6 +367,7 @@
 <script>
 (() => {
   'use strict';
+  const APP_VERSION = 'v4.1';
   const LOCK_BEFORE_ISO='2025-10-06';
   const DOUBLE_DELAY=280,TAP_MAX=350,MOVE_TOL=10;
   const CALS_META_KEY='suiviSante.calendars';
@@ -383,7 +385,7 @@
   const toISO=d=>d.toISOString().slice(0,10);
   const nextState=s=>(s+1)%3;
   const applyState=(el,s)=>{el.classList.remove('state-0','state-1','state-2');el.classList.add('state-'+s);};
-  const markModified=()=>localStorage.setItem('suiviSante.lastModified',Date.now());
+  const markModified=()=>{localStorage.setItem('suiviSante.lastModified',Date.now());if(typeof scheduleAutoSave==='function')scheduleAutoSave();};
   const persist=(key,obj)=>{localStorage.setItem(key,JSON.stringify(obj));markModified();};
   const loadLS=key=>{try{return JSON.parse(localStorage.getItem(key));}catch{return null;}};
 
@@ -445,6 +447,10 @@
   };
   updateGlobalDisplay();
 
+  // Injecter la version dans le drawer et le titre de la page
+  document.getElementById('drawerAppTitle').textContent = 'Mes Calendriers Santé ' + APP_VERSION;
+  document.title = 'Mes Calendriers Santé ' + APP_VERSION;
+
   /* ── Drawer ── */
   const drawer=document.getElementById('drawer');
   const drawerOverlay=document.getElementById('drawerOverlay');
@@ -463,11 +469,11 @@
     const lbl=txt=>{const l=document.createElement('div');l.className='drawer-label';l.textContent=txt;drawerBody.appendChild(l);};
 
     /* Export / Import */
-        /* JSONBin Cloud Sync */
-    sec('☁️ Cloud Sync (JSONBin)');
+        /* GitHub Gist Cloud Sync */
+    sec('☁️ Cloud Sync (GitHub Gist)');
     btn('☁️ Sauvegarder en ligne','',()=>uploadToCloud());
     btn('☁️ Restaurer depuis le cloud','',()=>openRestoreModal());
-    btn('⚙️ Configurer API JSONBin','',()=>{closeDrawer();openJBSetupModal();});
+    btn('⚙️ Configurer Gist / PAT','',()=>{closeDrawer();openJBSetupModal();});
     divider();
 
 sec('Export / Import');
@@ -988,20 +994,36 @@ sec('Export / Import');
     html2pdf().set(opt).from(clonedReport).save();
   }
 
-/* ── CLOUD SYNC (JSONBIN.IO) ── */
-const JB_URL = 'https://api.jsonbin.io/v3/b/';
+/* ── CLOUD SYNC (GITHUB GIST) ── */
+const GIST_API = 'https://api.github.com/gists/';
+const GIST_FILENAME = 'suivi_sante.json';
+
+// ── Indicateur de synchro dans la topbar ──
+const syncIndicator = (() => {
+  const el = document.createElement('div');
+  el.id = 'syncIndicator';
+  el.style.cssText = 'font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0;transition:color 0.3s;';
+  document.querySelector('.topbar').appendChild(el);
+  return {
+    idle:    ()=>{ el.textContent=''; },
+    saving:  ()=>{ el.style.color='var(--accent)'; el.textContent='☁️ Sauvegarde…'; },
+    ok:      ()=>{ el.style.color='var(--green)';  el.textContent='✅ Sauvegardé';  setTimeout(()=>el.textContent='', 3000); },
+    err:     ()=>{ el.style.color='var(--red)';    el.textContent='⚠️ Erreur sync'; }
+  };
+})();
 
 function getJBCreds() {
   return {
-    key: localStorage.getItem('suiviSante.jbKey'),
-    bin: localStorage.getItem('suiviSante.jbBin')
+    key: localStorage.getItem('suiviSante.jbKey'),  // PAT
+    bin: localStorage.getItem('suiviSante.jbBin')   // Gist ID
   };
 }
 
 function openJBSetupModal() {
   const creds = getJBCreds();
   document.getElementById('jbApiKeyInp').value = creds.key || '';
-  document.getElementById('jbBinIdInp').value = creds.bin || '';
+  document.getElementById('jbBinIdInp').value  = creds.bin || '';
+  document.getElementById('jbSetupStatus').textContent = '';
   document.getElementById('jbSetupBackdrop').classList.add('open');
   document.getElementById('jbSetupModal').classList.add('open');
 }
@@ -1013,102 +1035,153 @@ function closeJBSetupModal() {
 
 document.getElementById('jbSetupCancel').onclick = closeJBSetupModal;
 document.getElementById('jbSetupBackdrop').onclick = closeJBSetupModal;
-document.getElementById('jbSetupSave').onclick = () => {
+document.getElementById('jbSetupSave').onclick = async () => {
   const k = document.getElementById('jbApiKeyInp').value.trim();
   const b = document.getElementById('jbBinIdInp').value.trim();
-  if(!k || !b) return alert("Veuillez remplir les deux champs.");
-  localStorage.setItem('suiviSante.jbKey', k);
-  localStorage.setItem('suiviSante.jbBin', b);
-  closeJBSetupModal();
-  alert("Configuration sauvegardée ! Vous pouvez maintenant synchroniser.");
+  const status = document.getElementById('jbSetupStatus');
+  if (!k || !b) { status.style.color='var(--red)'; status.textContent='Veuillez remplir les deux champs.'; return; }
+  status.style.color='var(--accent)'; status.textContent='Vérification…';
+  try {
+    const res = await fetch(GIST_API + b, {
+      headers: { Authorization: 'token ' + k, Accept: 'application/vnd.github+json' }
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const gist = await res.json();
+    if (!gist.files || !gist.files[GIST_FILENAME]) {
+      // Fichier absent → on l'initialise
+      status.textContent='Initialisation du Gist…';
+      await writeGist(k, b, { backups: [] });
+    }
+    localStorage.setItem('suiviSante.jbKey', k);
+    localStorage.setItem('suiviSante.jbBin', b);
+    status.style.color='var(--green)'; status.textContent='✅ Connexion réussie !';
+    setTimeout(closeJBSetupModal, 1200);
+  } catch(e) {
+    status.style.color='var(--red)'; status.textContent='❌ Erreur : ' + e.message + ' — Vérifiez votre PAT et Gist ID.';
+  }
 };
 
 async function checkConfig() {
   const creds = getJBCreds();
-  if(!creds.key || !creds.bin) {
-    closeDrawer();
-    openJBSetupModal();
-    return false;
-  }
+  if (!creds.key || !creds.bin) { closeDrawer(); openJBSetupModal(); return false; }
   return creds;
 }
 
-// Fonction utilitaire pour lire le Bin
-async function fetchBin(creds) {
-  const res = await fetch(JB_URL + creds.bin, {
-    method: 'GET',
-    headers: { 'X-Master-Key': creds.key }
+// Lire le contenu du Gist
+async function fetchGist(creds) {
+  const res = await fetch(GIST_API + creds.bin, {
+    headers: { Authorization: 'token ' + creds.key, Accept: 'application/vnd.github+json' }
   });
-  if(!res.ok) throw new Error("Erreur HTTP " + res.status);
-  const data = await res.json();
-  return data.record;
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const gist = await res.json();
+  const file = gist.files[GIST_FILENAME];
+  if (!file) return { backups: [] };
+  // Si le contenu est tronqué, on fetch le raw_url
+  const content = file.truncated
+    ? await (await fetch(file.raw_url)).text()
+    : file.content;
+  return JSON.parse(content);
 }
 
-/* -- SAUVEGARDE -- */
-async function uploadToCloud() {
-  const creds = await checkConfig();
-  if(!creds) return;
+// Écrire dans le Gist (PATCH)
+async function writeGist(key, bin, payload) {
+  const res = await fetch(GIST_API + bin, {
+    method: 'PATCH',
+    headers: {
+      Authorization: 'token ' + key,
+      Accept: 'application/vnd.github+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ files: { [GIST_FILENAME]: { content: JSON.stringify(payload) } } })
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+}
 
+// Construire le payload local complet
+function buildLocalPayload() {
+  const localData = {
+    calendars: globalState.calDefs,
+    data: {},
+    lastModified: localStorage.getItem('suiviSante.lastModified') || Date.now()
+  };
+  globalState.calDefs.forEach(d => {
+    localData.data[d.id] = {
+      days:  loadLS('suiviSante.days.'  + d.id) || {},
+      notes: loadLS('suiviSante.notes.' + d.id) || {},
+      meds:  loadLS('suiviSante.meds.'  + d.id) || []
+    };
+  });
+  return localData;
+}
+
+/* ── Sauvegarde automatique (debounce 5 s) ── */
+let autoSaveTimer = null;
+function scheduleAutoSave() {
+  if (!getJBCreds().key) return; // pas configuré, on ignore
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(silentUpload, 5000);
+}
+
+async function silentUpload() {
+  const creds = getJBCreds();
+  if (!creds.key || !creds.bin) return;
+  syncIndicator.saving();
   try {
-    // 1. Récupérer l'état actuel du cloud
-    let cloudData = {};
-    try {
-      cloudData = await fetchBin(creds);
-    } catch(e) {
-      console.warn("Bin vide ou illisible, création d'un nouveau format.");
-    }
+    let cloudData = { backups: [] };
+    try { cloudData = await fetchGist(creds); } catch {}
+    if (!Array.isArray(cloudData.backups)) cloudData = { backups: [] };
 
-    // Le format cloud sera { backups: [ {timestamp, dateStr, data}, ... ] }
-    if(!cloudData || !Array.isArray(cloudData.backups)) {
-      cloudData = { backups: [] };
-    }
-
-    // 2. Construire le payload local
-    const localData = { calendars: globalState.calDefs, data: {}, lastModified: localStorage.getItem('suiviSante.lastModified')||Date.now() };
-    globalState.calDefs.forEach(d => {
-      localData.data[d.id] = {
-        days: loadLS('suiviSante.days.'+d.id) || {},
-        notes: loadLS('suiviSante.notes.'+d.id) || {},
-        meds: loadLS('suiviSante.meds.'+d.id) || []
-      };
-    });
-
-    // 3. Ajouter la nouvelle sauvegarde au début du tableau
-    const d = new Date();
     const newBackup = {
       timestamp: Date.now(),
-      dateStr: d.toLocaleString('fr-FR'),
-      data: localData
+      dateStr: new Date().toLocaleString('fr-FR'),
+      data: buildLocalPayload()
     };
-
     cloudData.backups.unshift(newBackup);
+    if (cloudData.backups.length > 5) cloudData.backups = cloudData.backups.slice(0, 5);
 
-    // 4. Ne garder que les 5 plus récents
-    if(cloudData.backups.length > 5) {
-      cloudData.backups = cloudData.backups.slice(0, 5);
-    }
-
-    // 5. Envoyer au cloud (PUT pour écraser le Bin avec le nouveau tableau)
-    const res = await fetch(JB_URL + creds.bin, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': creds.key
-      },
-      body: JSON.stringify(cloudData)
-    });
-
-    if(!res.ok) throw new Error("Erreur PUT HTTP " + res.status);
-
-    alert('✅ Sauvegarde Cloud réussie !');
-
+    await writeGist(creds.key, creds.bin, cloudData);
+    syncIndicator.ok();
   } catch(e) {
-    console.error(e);
-    alert("Erreur lors de la sauvegarde: Vérifiez votre Clé API et votre Bin ID.");
+    console.warn('Auto-save Gist échoué :', e);
+    syncIndicator.err();
   }
 }
 
-/* -- RESTAURATION -- */
+// Patch persist pour déclencher l'auto-save
+const _origPersist = persist;
+// (persist est déjà défini plus haut, on surcharge la référence)
+// On utilise un proxy sur les appels en interceptant markModified
+const _origMarkModified = markModified;
+
+/* ── Sauvegarde manuelle ── */
+async function uploadToCloud() {
+  const creds = await checkConfig();
+  if (!creds) return;
+  syncIndicator.saving();
+  try {
+    let cloudData = { backups: [] };
+    try { cloudData = await fetchGist(creds); } catch {}
+    if (!Array.isArray(cloudData.backups)) cloudData = { backups: [] };
+
+    const newBackup = {
+      timestamp: Date.now(),
+      dateStr: new Date().toLocaleString('fr-FR'),
+      data: buildLocalPayload()
+    };
+    cloudData.backups.unshift(newBackup);
+    if (cloudData.backups.length > 5) cloudData.backups = cloudData.backups.slice(0, 5);
+
+    await writeGist(creds.key, creds.bin, cloudData);
+    syncIndicator.ok();
+    alert('✅ Sauvegarde Cloud (Gist) réussie !');
+  } catch(e) {
+    console.error(e);
+    syncIndicator.err();
+    alert('Erreur lors de la sauvegarde : ' + e.message + '\nVérifiez votre PAT et Gist ID.');
+  }
+}
+
+/* ── Restauration ── */
 function closeRestoreModal() {
   document.getElementById('jbRestoreBackdrop').classList.remove('open');
   document.getElementById('jbRestoreModal').classList.remove('open');
@@ -1118,27 +1191,26 @@ document.getElementById('jbRestoreBackdrop').onclick = closeRestoreModal;
 
 async function openRestoreModal() {
   const creds = await checkConfig();
-  if(!creds) return;
+  if (!creds) return;
 
   document.getElementById('jbRestoreList').innerHTML = '';
-  document.getElementById('jbLoader').style.display='block';
+  document.getElementById('jbLoader').style.display = 'block';
   document.getElementById('jbRestoreBackdrop').classList.add('open');
   document.getElementById('jbRestoreModal').classList.add('open');
 
   try {
-    const cloudData = await fetchBin(creds);
-    document.getElementById('jbLoader').style.display='none';
+    const cloudData = await fetchGist(creds);
+    document.getElementById('jbLoader').style.display = 'none';
 
     const list = document.getElementById('jbRestoreList');
-    if(!cloudData || !cloudData.backups || cloudData.backups.length === 0) {
-      list.innerHTML = '<div style="padding:10px;text-align:center;color:#666;">Aucune sauvegarde trouvée dans ce Bin.</div>';
+    if (!cloudData || !cloudData.backups || cloudData.backups.length === 0) {
+      list.innerHTML = '<div style="padding:10px;text-align:center;color:#666;">Aucune sauvegarde trouvée dans ce Gist.</div>';
       return;
     }
 
     cloudData.backups.forEach((bkp, index) => {
       const btn = document.createElement('button');
       btn.className = 'jb-item';
-
       const isLatest = index === 0 ? '<span style="color:var(--green);font-size:11px;">(Dernière)</span>' : '';
       btn.innerHTML = `
         <div>
@@ -1153,8 +1225,8 @@ async function openRestoreModal() {
 
   } catch(e) {
     console.error(e);
-    document.getElementById('jbLoader').style.display='none';
-    alert("Erreur de lecture du Cloud. Vérifiez votre Clé API et Bin ID.");
+    document.getElementById('jbLoader').style.display = 'none';
+    alert('Erreur de lecture du Gist. Vérifiez votre PAT et Gist ID.\n' + e.message);
   }
 }
 
@@ -1162,65 +1234,54 @@ async function performRestore(bkp) {
   try {
     closeRestoreModal();
 
-    const cloudMod = parseInt(bkp.data.lastModified||'0', 10);
-    const localMod = parseInt(localStorage.getItem('suiviSante.lastModified')||'0', 10);
+    const cloudMod = parseInt(bkp.data.lastModified || '0', 10);
+    const localMod = parseInt(localStorage.getItem('suiviSante.lastModified') || '0', 10);
 
     let msg = `Voulez-vous vraiment écraser vos données locales par la sauvegarde du ${bkp.dateStr} ?`;
-    if(localMod > cloudMod && localMod > 0 && cloudMod > 0) {
+    if (localMod > cloudMod && localMod > 0 && cloudMod > 0) {
       msg = `🚨 ATTENTION DANGER 🚨\n\nVos données locales actuelles sont PLUS RÉCENTES que cette sauvegarde Cloud.\nSi vous continuez, vos modifications locales récentes seront définitivement perdues.\n\nVoulez-vous quand même forcer la restauration ?`;
     }
 
     const ok = await showConfirm('Restaurer', msg);
-    if(!ok) return;
+    if (!ok) return;
 
     const creds = getJBCreds();
 
-    // BACKUP DE SECOURS FIABLE SUR MAC/SAFARI
-    const localData = { calendars: globalState.calDefs, data: {}, lastModified: localStorage.getItem('suiviSante.lastModified')||Date.now() };
-    globalState.calDefs.forEach(d => {
-      localData.data[d.id] = {
-        days: loadLS('suiviSante.days.'+d.id) || {},
-        notes: loadLS('suiviSante.notes.'+d.id) || {},
-        meds: loadLS('suiviSante.meds.'+d.id) || []
-      };
-    });
-    const bkpBlob = new Blob([JSON.stringify(localData)], {type:'application/json'});
+    // Backup de secours local avant restauration
+    const bkpBlob = new Blob([JSON.stringify(buildLocalPayload())], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(bkpBlob);
     a.download = 'backup_secours_avant_restauration.json';
-    document.body.appendChild(a); // Nécessaire pour Safari
+    document.body.appendChild(a);
     a.click();
     setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 100);
 
-    // LAISSER LE TEMPS AU TÉLÉCHARGEMENT DE SE LANCER AVANT DE RELOAD
     setTimeout(() => {
-        // Vider et Appliquer les données du Cloud
-        localStorage.clear();
-        const dta = bkp.data;
+      localStorage.clear();
+      const dta = bkp.data;
 
-        if(creds.key) localStorage.setItem('suiviSante.jbKey', creds.key);
-        if(creds.bin) localStorage.setItem('suiviSante.jbBin', creds.bin);
+      if (creds.key) localStorage.setItem('suiviSante.jbKey', creds.key);
+      if (creds.bin) localStorage.setItem('suiviSante.jbBin', creds.bin);
 
-        persist(CALS_META_KEY, dta.calendars);
-        dta.calendars.forEach(def => {
-          const calData = dta.data && dta.data[def.id];
-          if(calData) {
-            persist('suiviSante.days.'+def.id, calData.days||{});
-            persist('suiviSante.notes.'+def.id, calData.notes||{});
-            persist('suiviSante.meds.'+def.id, calData.meds||[]);
-          }
-          if(def.title) localStorage.setItem('suiviSante.title.'+def.id, def.title);
-        });
-        localStorage.setItem('suiviSante.lastModified', dta.lastModified||Date.now());
+      persist(CALS_META_KEY, dta.calendars);
+      dta.calendars.forEach(def => {
+        const calData = dta.data && dta.data[def.id];
+        if (calData) {
+          persist('suiviSante.days.'  + def.id, calData.days  || {});
+          persist('suiviSante.notes.' + def.id, calData.notes || {});
+          persist('suiviSante.meds.'  + def.id, calData.meds  || []);
+        }
+        if (def.title) localStorage.setItem('suiviSante.title.' + def.id, def.title);
+      });
+      localStorage.setItem('suiviSante.lastModified', dta.lastModified || Date.now());
 
-        alert("Restauration réussie !");
-        // RAFRAICHISSEMENT AGRESSIF POUR IPHONE
-        window.location.href = window.location.pathname + '?t=' + Date.now();
+      alert('Restauration réussie !');
+      window.location.href = window.location.pathname + '?t=' + Date.now();
     }, 500);
 
   } catch(e) {
     console.error(e);
-    alert("Erreur lors de l'application de la restauration.");
+    alert("Erreur lors de la restauration : " + e.message);
   }
 }
 
