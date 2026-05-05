@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Mes Favoris</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #08080a;
+    --bg-2: #0d0d10;
+    --surface: #131318;
+    --surface-2: #1a1a21;
+    --surface-3: #22222b;
+    --border: #232330;
+    --border-bright: #2e2e40;
+    --text: #f4f4f8;
+    --text-2: #9090a8;
+    --text-3: #4a4a5e;
+    --accent: #c9ff5b;
+    --accent-glow: rgba(201, 255, 91, 0.15);
+    --radius: 10px;
+    --shadow-lift: 0 0 0 1px rgba(255,255,255,0.04), 0 8px 24px rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+
+  body {
+    font-family: 'Geist', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.5;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -20%; left: -10%;
+    width: 70%; height: 60%;
+    background: radial-gradient(circle, rgba(201,255,91,0.04) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -30%; right: -10%;
+    width: 60%; height: 60%;
+    background: radial-gradient(circle, rgba(120,90,255,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    height: 50px;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+    background: rgba(8,8,10,0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    gap: 12px;
+    position: relative;
+    z-index: 10;
+  }
+
+  .brand { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .brand-logo {
+    width: 20px; height: 20px;
+    background: var(--accent);
+    border-radius: 5px;
+    position: relative;
+    box-shadow: 0 0 14px var(--accent-glow);
+  }
+  .brand-logo::after {
+    content: ''; position: absolute;
+    inset: 5px; background: var(--bg);
+    border-radius: 2px;
+  }
+  .brand-name {
+    font-family: 'Instrument Serif', serif;
+    font-size: 19px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    font-style: italic;
+  }
+
+  .topbar-search {
+    flex: 1;
+    max-width: 420px;
+    position: relative;
+    margin: 0 auto;
+  }
+  .topbar-search input {
+    width: 100%;
+    height: 32px;
+    padding: 0 36px 0 34px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Geist', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: all 0.15s;
+  }
+  .topbar-search input::placeholder { color: var(--text-3); }
+  .topbar-search input:focus { border-color: var(--border-bright); background: var(--surface-2); }
+  .search-icon {
+    position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+    color: var(--text-3); pointer-events: none;
+  }
+  .kbd {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px; color: var(--text-3);
+    background: var(--surface-2); border: 1px solid var(--border);
+    padding: 2px 6px; border-radius: 4px; pointer-events: none;
+  }
+
+  .topbar-btn {
+    height: 32px; padding: 0 13px;
+    border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text);
+    font-family: 'Geist', sans-serif; font-size: 12.5px; font-weight: 500;
+    cursor: pointer; display: flex; align-items: center; gap: 6px;
+    transition: all 0.15s;
+  }
+  .topbar-btn:hover { background: var(--surface-2); border-color: var(--border-bright); }
+  .btn-primary {
+    background: var(--accent); color: #0a0a0a;
+    border-color: var(--accent); font-weight: 600;
+  }
+  .btn-primary:hover {
+    background: #d6ff7a; border-color: #d6ff7a;
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  .icon-btn {
+    width: 32px; height: 32px;
+    border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text-2);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .icon-btn:hover { background: var(--surface-2); color: var(--text); border-color: var(--border-bright); }
+
+  .avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #c9ff5b, #6c63ff);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10.5px; font-weight: 600; color: #0a0a0a;
+    cursor: pointer;
+  }
+
+  /* ── MAIN ── */
+  .main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 40px 40px;
+    position: relative;
+  }
+
+  /* ── CONTENT WRAPPER — centered, max-width aligned ── */
+  .content {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  /* ── PILLS ROWS ── */
+  .pills-stack {
+    display: flex; flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .pills-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  /* Row 2 — smaller, single scrollable line */
+  .pills-row.pills-row-sm {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .pills-row.pills-row-sm::-webkit-scrollbar { display: none; }
+  .pills-row.pills-row-sm .pill {
+    height: 24px;
+    padding: 0 9px;
+    font-size: 11px;
+    border-radius: 6px;
+    gap: 5px;
+  }
+  .pills-row.pills-row-sm .pill-dot {
+    width: 6px; height: 6px;
+  }
+  .pills-row.pills-row-sm .pill-count {
+    font-size: 9.5px;
+  }
+  .pills-row.pills-row-sm .pill-remove {
+    width: 15px; height: 15px;
+    font-size: 9px;
+  }
+
+  .pill {
+    height: 30px;
+    padding: 0 13px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-2);
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 7px;
+    transition: all 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-family: 'Geist', sans-serif;
+    position: relative;
+  }
+  .pill:hover {
+    background: var(--surface-2);
+    color: var(--text);
+    border-color: var(--border-bright);
+  }
+  .pill.active { color: var(--text); border-color: rgba(255,255,255,0.15); background: var(--surface-2); }
+  .pill.active.work { background: rgba(201,255,91,0.08); border-color: rgba(201,255,91,0.35); color: #c9ff5b; }
+  .pill.active.design { background: rgba(255,107,157,0.08); border-color: rgba(255,107,157,0.35); color: #ff6b9d; }
+  .pill.active.dev { background: rgba(108,180,255,0.08); border-color: rgba(108,180,255,0.35); color: #6cb4ff; }
+  .pill.active.news { background: rgba(255,184,77,0.08); border-color: rgba(255,184,77,0.35); color: #ffb84d; }
+  .pill.active.perso { background: rgba(184,138,255,0.08); border-color: rgba(184,138,255,0.35); color: #b88aff; }
+  .pill.active.pinned { color: var(--accent); border-color: rgba(201,255,91,0.35); background: rgba(201,255,91,0.08); }
+
+  .pill-dot {
+    width: 7px; height: 7px;
+    border-radius: 2px; flex-shrink: 0;
+  }
+  .pill-count {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px; color: var(--text-3);
+    margin-left: 2px;
+  }
+  .pill.active .pill-count { color: inherit; opacity: 0.7; }
+
+  /* Edit mode for views */
+  .edit-mode .pill.editable {
+    padding-right: 26px;
+    animation: shake 0.3s ease;
+  }
+  .pill-remove {
+    position: absolute;
+    right: 4px; top: 50%; transform: translateY(-50%);
+    width: 18px; height: 18px;
+    border-radius: 4px;
+    background: rgba(255,80,100,0.15);
+    color: #ff7088;
+    border: none; cursor: pointer;
+    display: none;
+    align-items: center; justify-content: center;
+    font-size: 11px;
+    transition: background 0.12s;
+  }
+  .edit-mode .pill.editable .pill-remove { display: flex; }
+  .pill-remove:hover { background: rgba(255,80,100,0.3); }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-1px); }
+    75% { transform: translateX(1px); }
+  }
+
+  .pill-add {
+    background: transparent;
+    border: 1px dashed var(--border-bright);
+    color: var(--text-3);
+  }
+  .pill-add:hover {
+    color: var(--accent);
+    border-color: rgba(201,255,91,0.4);
+    background: rgba(201,255,91,0.04);
+  }
+
+  .pill-edit-toggle {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-3);
+  }
+  .pill-edit-toggle:hover { color: var(--text); border-color: var(--border-bright); }
+  .pill-edit-toggle.active {
+    color: var(--accent);
+    border-color: rgba(201,255,91,0.35);
+    background: rgba(201,255,91,0.06);
+  }
+
+  /* ── SORT BAR ── */
+  .sort-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    padding: 4px 0;
+  }
+  .sort-left {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    color: var(--text-3);
+  }
+  .sort-left strong { color: var(--text); font-weight: 500; }
+
+  .sort-right {
+    position: relative;
+  }
+  .sort-trigger {
+    height: 28px;
+    padding: 0 11px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--text-2);
+    font-size: 11.5px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Geist', sans-serif;
+    transition: all 0.15s;
+  }
+  .sort-trigger:hover { background: var(--surface-2); color: var(--text); }
+  .sort-trigger svg { color: var(--text-3); }
+
+  .sort-menu {
+    position: absolute;
+    top: 36px; right: 0;
+    min-width: 220px;
+    background: var(--surface);
+    border: 1px solid var(--border-bright);
+    border-radius: 8px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    padding: 4px;
+    z-index: 20;
+    opacity: 0; pointer-events: none;
+    transform: translateY(-4px);
+    transition: all 0.15s;
+  }
+  .sort-menu.open { opacity: 1; pointer-events: all; transform: translateY(0); }
+
+  .sort-option {
+    display: flex; align-items: center;
+    padding: 8px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    color: var(--text-2);
+    font-size: 12px;
+    transition: background 0.12s;
+    gap: 9px;
+  }
+  .sort-option:hover { background: var(--surface-2); color: var(--text); }
+  .sort-option svg { color: var(--text-3); flex-shrink: 0; }
+  .sort-option.active { color: var(--accent); }
+  .sort-option.active svg { color: var(--accent); }
+  .sort-option .check {
+    margin-left: auto;
+    opacity: 0;
+    color: var(--accent);
+  }
+  .sort-option.active .check { opacity: 1; }
+
+  /* ── LIST VIEW ── */
+  .list-view {
+    display: flex; flex-direction: column;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .list-row {
+    display: grid;
+    grid-template-columns: 32px 1fr 240px 90px 90px;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.12s;
+    animation: fadeUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+    position: relative;
+  }
+  .list-row:last-child { border-bottom: none; }
+  .list-row:hover { background: var(--surface-2); }
+  .list-row:hover .list-actions { opacity: 1; }
+
+  .list-row::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--c-color);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .list-row:hover::before { opacity: 0.7; }
+
+  .favicon {
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    background: var(--surface-3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .favicon img {
+    width: 16px; height: 16px;
+    object-fit: contain;
+    display: block;
+  }
+
+  .list-title-wrap { min-width: 0; }
+  .list-title {
+    font-size: 13px; font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    letter-spacing: -0.005em;
+  }
+  .list-meta {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    color: var(--text-3);
+    margin-top: 2px;
+  }
+
+  .list-domain {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    color: var(--text-3);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .list-tag {
+    font-family: 'Geist Mono', monospace;
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-align: center;
+    border: 1px solid;
+    justify-self: start;
+  }
+  .list-actions {
+    display: flex;
+    gap: 5px;
+    opacity: 0;
+    transition: opacity 0.15s;
+    justify-self: end;
+  }
+  .list-action {
+    width: 30px; height: 30px;
+    border: 1px solid var(--border);
+    background: var(--bg-2);
+    border-radius: 7px;
+    color: var(--text-3); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s;
+  }
+  .list-action:hover { background: var(--surface-3); color: var(--text); }
+  .list-action.pinned { color: var(--accent); border-color: rgba(201,255,91,0.3); }
+  .list-action.danger:hover { background: rgba(255,80,100,0.15); color: #ff7088; border-color: rgba(255,80,100,0.3); }
+  .list-action.edit:hover { background: rgba(108,180,255,0.15); color: #6cb4ff; border-color: rgba(108,180,255,0.3); }
+
+  /* ── COLOR ACCENTS ── */
+  .c-work { --c-color: #c9ff5b; }
+  .c-design { --c-color: #ff6b9d; }
+  .c-dev { --c-color: #6cb4ff; }
+  .c-news { --c-color: #ffb84d; }
+  .c-perso { --c-color: #b88aff; }
+
+  .tag-work { color: #c9ff5b; border-color: rgba(201,255,91,0.25); background: rgba(201,255,91,0.08); }
+  .tag-design { color: #ff6b9d; border-color: rgba(255,107,157,0.25); background: rgba(255,107,157,0.08); }
+  .tag-dev { color: #6cb4ff; border-color: rgba(108,180,255,0.25); background: rgba(108,180,255,0.08); }
+  .tag-news { color: #ffb84d; border-color: rgba(255,184,77,0.25); background: rgba(255,184,77,0.08); }
+  .tag-perso { color: #b88aff; border-color: rgba(184,138,255,0.25); background: rgba(184,138,255,0.08); }
+
+  /* ── MODAL (palette + create view + edit) ── */
+  .modal-wrap {
+    position: fixed; inset: 0; z-index: 1000;
+    display: flex; align-items: flex-start; justify-content: center;
+    padding-top: 12vh;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.18s;
+  }
+  .modal-wrap.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    width: 100%; max-width: 520px;
+    margin: 0 16px;
+    background: var(--surface);
+    border: 1px solid var(--border-bright);
+    border-radius: 12px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
+    transform: translateY(-12px) scale(0.98);
+    opacity: 0;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+  }
+  .modal-wrap.open .modal { transform: translateY(0) scale(1); opacity: 1; }
+
+  .modal-header {
+    display: flex; align-items: center;
+    padding: 0 14px;
+    height: 46px;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+  }
+  .modal-icon { color: var(--accent); }
+  .modal-title-text {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 17px;
+    color: var(--text);
+    flex: 1;
+  }
+  .modal-input {
+    flex: 1;
+    background: none; border: none;
+    color: var(--text);
+    font-family: 'Geist', sans-serif;
+    font-size: 14px;
+    outline: none;
+  }
+  .modal-input::placeholder { color: var(--text-3); }
+
+  .modal-esc {
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px; color: var(--text-3);
+    background: var(--surface-2); border: 1px solid var(--border);
+    padding: 2px 6px; border-radius: 4px; cursor: pointer;
+  }
+
+  .modal-body { padding: 14px; }
+
+  .palette-preview {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-2);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    opacity: 0; max-height: 0;
+    overflow: hidden;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .palette-preview.show { opacity: 1; max-height: 80px; }
+  .palette-preview .favicon { width: 28px; height: 28px; font-size: 13px; }
+  .pp-info { flex: 1; min-width: 0; }
+  .pp-title { font-size: 12.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pp-url { font-family: 'Geist Mono', monospace; font-size: 10.5px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pp-loading { color: var(--accent); font-family: 'Geist Mono', monospace; font-size: 11px; }
+
+  .modal-section {
+    font-family: 'Geist Mono', monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    color: var(--text-3);
+    text-transform: uppercase;
+    margin: 0 0 7px;
+    padding: 0 4px;
+  }
+
+  .field-group { margin-bottom: 12px; }
+
+  .modal-field {
+    width: 100%;
+    height: 36px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 0 12px;
+    color: var(--text);
+    font-family: 'Geist', sans-serif;
+    font-size: 12.5px;
+    outline: none;
+  }
+  .modal-field:focus { border-color: var(--border-bright); }
+
+  /* iOS fix — prevent auto-zoom on input focus (triggered when font-size < 16px) */
+  @supports (-webkit-touch-callout: none) {
+    .modal-field, .modal-input, .palette-input, .palette-tags-input,
+    .topbar-search input {
+      font-size: 16px !important;
+    }
+  }
+
+  .collection-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+  .col-pick {
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    cursor: pointer;
+    background: var(--surface-2);
+    color: var(--text-2);
+    font-size: 11px;
+    text-align: center;
+    transition: all 0.12s;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+  }
+  .col-pick:hover { background: var(--surface-3); color: var(--text); }
+  .col-pick.active { color: var(--text); border-color: rgba(255,255,255,0.15); }
+  .col-pick.active.work { background: rgba(201,255,91,0.1); border-color: rgba(201,255,91,0.4); }
+  .col-pick.active.design { background: rgba(255,107,157,0.1); border-color: rgba(255,107,157,0.4); }
+  .col-pick.active.dev { background: rgba(108,180,255,0.1); border-color: rgba(108,180,255,0.4); }
+  .col-pick.active.news { background: rgba(255,184,77,0.1); border-color: rgba(255,184,77,0.4); }
+  .col-pick.active.perso { background: rgba(184,138,255,0.1); border-color: rgba(184,138,255,0.4); }
+  .col-pick-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+  /* color picker for new view */
+  .color-picker {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .color-swatch {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.12s;
+    position: relative;
+  }
+  .color-swatch:hover { transform: scale(1.08); }
+  .color-swatch.active {
+    border-color: var(--text);
+    box-shadow: 0 0 0 2px var(--bg);
+  }
+
+  .modal-foot {
+    border-top: 1px solid var(--border);
+    padding: 10px 14px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--bg-2);
+    gap: 10px;
+  }
+  .modal-hints {
+    display: flex; gap: 12px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    color: var(--text-3);
+  }
+  .modal-hints kbd {
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    padding: 1px 5px; border-radius: 3px;
+    margin-right: 3px; color: var(--text-2);
+  }
+  .save-btn {
+    height: 30px;
+    padding: 0 16px;
+    background: var(--accent); color: #0a0a0a;
+    border: none; border-radius: 7px;
+    font-family: 'Geist', sans-serif;
+    font-size: 12.5px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; gap: 6px;
+    transition: all 0.15s;
+  }
+  .save-btn:hover { background: #d6ff7a; box-shadow: 0 0 0 3px var(--accent-glow); }
+
+  .secondary-btn {
+    height: 30px;
+    padding: 0 14px;
+    background: var(--surface-2); color: var(--text-2);
+    border: 1px solid var(--border); border-radius: 7px;
+    font-family: 'Geist', sans-serif;
+    font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .secondary-btn:hover { background: var(--surface-3); color: var(--text); border-color: var(--border-bright); }
+  .secondary-btn.danger:hover {
+    background: rgba(255,80,100,0.1); color: #ff7088;
+    border-color: rgba(255,80,100,0.35);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 20px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surface-2);
+    border: 1px solid var(--border-bright);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 11.5px;
+    color: var(--text);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    opacity: 0;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1100;
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'Geist Mono', monospace;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+  .empty {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--text-3);
+    font-size: 13px;
+  }
+  .empty-emoji { font-size: 32px; margin-bottom: 8px; opacity: 0.5; }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-bright); }
+
+  .mobile-fab {
+    display: none;
+    position: fixed;
+    bottom: 20px; right: 20px;
+    width: 52px; height: 52px;
+    background: var(--accent); color: #0a0a0a;
+    border: none; border-radius: 16px;
+    box-shadow: 0 8px 28px rgba(201,255,91,0.4);
+    cursor: pointer; z-index: 50;
+    align-items: center; justify-content: center;
+  }
+
+  @media (max-width: 720px) {
+    .topbar { padding: 0 12px; gap: 8px; }
+    .topbar-search { max-width: none; }
+    .kbd { display: none; }
+    .topbar .topbar-btn { display: none; }
+    .avatar { display: none; }
+    .mobile-fab { display: flex; }
+    .main { padding: 16px 14px 90px; }
+    .content { max-width: 100%; }
+    .list-row {
+      grid-template-columns: 28px 1fr auto;
+      gap: 10px; padding: 10px 14px;
+    }
+    .list-domain, .list-tag { display: none; }
+    .list-actions { opacity: 1; }
+    /* hide desktop Ajouter btn on mobile (FAB takes over) */
+    .sort-bar .btn-primary { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-logo"></div>
+      <div class="brand-name">Mes favoris</div>
+    </div>
+
+    <div class="topbar-search">
+      <span class="search-icon">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      </span>
+      <input type="text" id="searchInput" placeholder="Rechercher ou coller une URL…" oninput="onSearch()">
+      <span class="kbd">⌘K</span>
+    </div>
+
+    <button class="topbar-btn icon-btn" title="Importer">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+    </button>
+    <button class="topbar-btn icon-btn" title="Réglages">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    </button>
+    <div class="avatar">JC</div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="content">
+
+    <!-- VIEW PILLS — TWO ROWS -->
+    <div class="pills-stack" id="pillsStack">
+      <!-- Row 1: system views -->
+      <div class="pills-row" id="systemPills">
+        <div class="pill active" data-col="all" onclick="filterCollection('all', this)">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Tous
+          <span class="pill-count" id="count-all">12</span>
+        </div>
+        <div class="pill pinned" data-col="pinned" onclick="filterCollection('pinned', this)">
+          <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Épinglés
+          <span class="pill-count" id="count-pinned">3</span>
+        </div>
+        <div class="pill" data-col="recent" onclick="filterCollection('recent', this)">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          Récents
+          <span class="pill-count" id="count-recent">5</span>
+        </div>
+      </div>
+
+      <!-- Row 2: custom collections — smaller, scrollable -->
+      <div class="pills-row pills-row-sm" id="customPills">
+        <!-- collections rendered here -->
+        <button class="pill pill-add" onclick="openCreateView()" title="Nouvelle vue">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          Nouvelle
+        </button>
+        <button class="pill pill-edit-toggle" id="editToggle" onclick="toggleEditMode()" title="Modifier">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          Modifier
+        </button>
+      </div>
+    </div>
+
+    <!-- SORT BAR -->
+    <div class="sort-bar">
+      <div class="sort-left">
+        <strong id="resultsCount">12</strong> favoris
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button class="topbar-btn btn-primary" onclick="openPalette()">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          Ajouter
+        </button>
+        <div class="sort-right">
+        <button class="sort-trigger" onclick="toggleSortMenu(event)">
+          <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M7 12h10M11 18h2"/></svg>
+          <span id="currentSort">Utilisation</span>
+          <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="sort-menu" id="sortMenu">
+          <div class="sort-option" data-sort="date" onclick="setSort('date', 'Date d\'ajout')">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span>Date d'ajout <span style="color:var(--text-3);font-size:10px">· récent → ancien</span></span>
+            <svg class="check" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>
+          </div>
+          <div class="sort-option" data-sort="alpha" onclick="setSort('alpha', 'Alphabétique')">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 18h12M4 12h8M4 6h4M16 4l4 4-4 4M20 8H8"/></svg>
+            <span>Alphabétique <span style="color:var(--text-3);font-size:10px">· A → Z</span></span>
+            <svg class="check" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>
+          </div>
+          <div class="sort-option active" data-sort="usage" onclick="setSort('usage', 'Utilisation')">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12l3-3 4 4 5-5 4 4 4-4"/><path d="M2 20h20"/></svg>
+            <span>Utilisation <span style="color:var(--text-3);font-size:10px">· + cliqué → -</span></span>
+            <svg class="check" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>
+          </div>
+        </div><!-- sort-menu -->
+      </div><!-- sort-right -->
+      </div><!-- right group -->
+    </div><!-- sort-bar -->
+
+    <div id="container"></div>
+
+    </div><!-- content -->
+  </div><!-- main -->
+</div><!-- app -->
+
+<!-- ADD/EDIT BOOKMARK MODAL -->
+<div class="modal-wrap" id="paletteWrap" onclick="handleModalClick(event, 'paletteWrap')">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-icon">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+      </span>
+      <input type="url" class="modal-input" id="paletteUrl" placeholder="Collez une URL ou tapez un titre…" oninput="onPaletteInput()" autocomplete="off">
+      <span class="modal-esc" onclick="closePalette()">esc</span>
+    </div>
+
+    <div class="modal-body">
+      <div class="palette-preview" id="palettePreview">
+        <div class="favicon" id="ppFavicon" style="width:28px;height:28px;font-size:13px"></div>
+        <div class="pp-info">
+          <div class="pp-title" id="ppTitle">—</div>
+          <div class="pp-url" id="ppUrl">—</div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="modal-section">Titre</div>
+        <input type="text" class="modal-field" id="paletteTitle" placeholder="Nom du favori (auto-rempli si possible)">
+      </div>
+
+      <div class="field-group">
+        <div class="modal-section">Vue</div>
+        <div class="collection-grid" id="modalColGrid">
+          <!-- rendered dynamically -->
+        </div>
+      </div>
+
+      <div class="field-group" style="margin-bottom:0">
+        <div class="modal-section">Tags (optionnel)</div>
+        <input type="text" class="modal-field" id="paletteTags" placeholder="outil, ref, à-lire…">
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <div class="modal-hints">
+        <span><kbd>↵</kbd> enregistrer</span>
+        <span><kbd>esc</kbd> fermer</span>
+      </div>
+      <button class="save-btn" onclick="saveBookmark()">
+        <span id="saveBtnLabel">Enregistrer</span>
+        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE VIEW MODAL -->
+<div class="modal-wrap" id="createViewWrap" onclick="handleModalClick(event, 'createViewWrap')">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-icon">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+      </span>
+      <span class="modal-title-text">Nouvelle vue</span>
+      <span class="modal-esc" onclick="closeCreateView()">esc</span>
+    </div>
+
+    <div class="modal-body">
+      <div class="field-group">
+        <div class="modal-section">Nom</div>
+        <input type="text" class="modal-field" id="newViewName" placeholder="Ex : Tutoriels, Recettes, Voyages…" autocomplete="off">
+      </div>
+
+      <div class="field-group" style="margin-bottom:0">
+        <div class="modal-section">Couleur</div>
+        <div class="color-picker" id="colorPicker">
+          <div class="color-swatch active" style="background:#c9ff5b" data-color="#c9ff5b" onclick="pickColor(this)"></div>
+          <div class="color-swatch" style="background:#ff6b9d" data-color="#ff6b9d" onclick="pickColor(this)"></div>
+          <div class="color-swatch" style="background:#6cb4ff" data-color="#6cb4ff" onclick="pickColor(this)"></div>
+          <div class="color-swatch" style="background:#ffb84d" data-color="#ffb84d" onclick="pickColor(this)"></div>
+          <div class="color-swatch" style="background:#b88aff" data-color="#b88aff" onclick="pickColor(this)"></div>
+          <div class="color-swatch" style="background:#ff7e5f" data-color="#ff7e5f" onclick="pickColor(this)"></div>
+          <div class="color-swatch" style="background:#5fffd4" data-color="#5fffd4" onclick="pickColor(this)"></div>
+          <div class="color-swatch" style="background:#ff5fa0" data-color="#ff5fa0" onclick="pickColor(this)"></div>
+          <div class="color-swatch" style="background:#a0a0ff" data-color="#a0a0ff" onclick="pickColor(this)"></div>
+          <div class="color-swatch" style="background:#ffd93d" data-color="#ffd93d" onclick="pickColor(this)"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="secondary-btn" onclick="closeCreateView()">Annuler</button>
+      <button class="save-btn" onclick="createView()">
+        Créer la vue
+        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<button class="mobile-fab" onclick="openPalette()" aria-label="Ajouter">
+  <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+<div class="toast" id="toast"><span class="toast-dot"></span> <span id="toastMsg">—</span></div>
+
+<script>
+// ── DATA ──
+let views = [
+  { id: 'work', name: 'Travail', color: '#c9ff5b' },
+  { id: 'design', name: 'Design', color: '#ff6b9d' },
+  { id: 'dev', name: 'Dev', color: '#6cb4ff' },
+  { id: 'news', name: 'Actualités', color: '#ffb84d' },
+  { id: 'perso', name: 'Personnel', color: '#b88aff' },
+];
+
+const now = Date.now();
+const day = 86400000;
+let bookmarks = [
+  { id:1, title:"Notion", url:"https://notion.so", domain:"notion.so", emoji:"N", collection:"work", pinned:true, addedAt: now - 30*day, clicks: 142 },
+  { id:2, title:"Figma", url:"https://figma.com", domain:"figma.com", emoji:"F", collection:"design", pinned:true, addedAt: now - 25*day, clicks: 89 },
+  { id:3, title:"GitHub", url:"https://github.com", domain:"github.com", emoji:"⌥", collection:"dev", pinned:true, addedAt: now - 60*day, clicks: 215 },
+  { id:4, title:"Le Monde", url:"https://lemonde.fr", domain:"lemonde.fr", emoji:"M", collection:"news", pinned:false, addedAt: now - 2*day, clicks: 34 },
+  { id:5, title:"Dribbble", url:"https://dribbble.com", domain:"dribbble.com", emoji:"D", collection:"design", pinned:false, addedAt: now - 4*day, clicks: 22 },
+  { id:6, title:"Linear", url:"https://linear.app", domain:"linear.app", emoji:"L", collection:"work", pinned:false, addedAt: now - 1*day, clicks: 67 },
+  { id:7, title:"MDN Web Docs", url:"https://developer.mozilla.org", domain:"mozilla.org", emoji:"M", collection:"dev", pinned:false, addedAt: now - 90*day, clicks: 178 },
+  { id:8, title:"Coolors", url:"https://coolors.co", domain:"coolors.co", emoji:"C", collection:"design", pinned:false, addedAt: now - 50*day, clicks: 12 },
+  { id:9, title:"Hacker News", url:"https://news.ycombinator.com", domain:"ycombinator.com", emoji:"Y", collection:"news", pinned:false, addedAt: now - 3*day, clicks: 56 },
+  { id:10, title:"Slack", url:"https://slack.com", domain:"slack.com", emoji:"S", collection:"work", pinned:false, addedAt: now - 15*day, clicks: 8 },
+  { id:11, title:"Basecamp", url:"https://basecamp.com", domain:"basecamp.com", emoji:"B", collection:"work", pinned:false, addedAt: now - 40*day, clicks: 4 },
+  { id:12, title:"Airbnb", url:"https://airbnb.fr", domain:"airbnb.fr", emoji:"A", collection:"perso", pinned:false, addedAt: now - 5*day, clicks: 19 },
+];
+
+let currentCollection = 'all';
+let currentSort = 'usage';
+let pickedCol = 'work';
+let pickedColor = '#c9ff5b';
+let editMode = false;
+let editingBookmarkId = null;
+
+// ── INJECT VIEW STYLES DYNAMICALLY ──
+const styleEl = document.createElement('style');
+document.head.appendChild(styleEl);
+
+function injectViewStyles() {
+  let css = '';
+  views.forEach(v => {
+    const c = v.color;
+    const rgb = hexToRgb(c);
+    css += `
+      .c-${v.id} { --c-color: ${c}; }
+      .pill.active.col-${v.id} { background: rgba(${rgb},0.08); border-color: rgba(${rgb},0.35); color: ${c}; }
+      .tag-${v.id} { color: ${c}; border-color: rgba(${rgb},0.25); background: rgba(${rgb},0.08); }
+      .col-pick.active.col-${v.id} { background: rgba(${rgb},0.1); border-color: rgba(${rgb},0.4); }
+    `;
+  });
+  styleEl.textContent = css;
+}
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `${r},${g},${b}`;
+}
+
+// ── RENDER PILLS ──
+function renderPills() {
+  const row = document.getElementById('customPills');
+  // remove old custom pills (keep add and edit-toggle buttons)
+  Array.from(row.querySelectorAll('.pill')).forEach(p => {
+    if (!p.classList.contains('pill-add') && !p.classList.contains('pill-edit-toggle')) p.remove();
+  });
+  // insert before pill-add
+  const addBtn = row.querySelector('.pill-add');
+  views.forEach(v => {
+    const count = bookmarks.filter(b => b.collection === v.id).length;
+    const pill = document.createElement('div');
+    pill.className = `pill editable col-${v.id} ${currentCollection === v.id ? 'active' : ''}`;
+    pill.dataset.col = v.id;
+    pill.onclick = (e) => {
+      if (e.target.closest('.pill-remove')) return;
+      filterCollection(v.id, pill);
+    };
+    pill.innerHTML = `
+      <span class="pill-dot" style="background:${v.color}"></span>
+      ${v.name}
+      <span class="pill-count">${count}</span>
+      <button class="pill-remove" onclick="event.stopPropagation();removeView('${v.id}')" title="Supprimer">
+        <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    `;
+    row.insertBefore(pill, addBtn);
+  });
+  injectViewStyles();
+  updateCounts();
+}
+
+function updateCounts() {
+  document.getElementById('count-all').textContent = bookmarks.length;
+  document.getElementById('count-pinned').textContent = bookmarks.filter(b => b.pinned).length;
+  const recent = bookmarks.filter(b => (now - b.addedAt) < 7*day).length;
+  document.getElementById('count-recent').textContent = recent;
+}
+
+// ── EDIT MODE ──
+function toggleEditMode() {
+  editMode = !editMode;
+  document.getElementById('pillsStack').classList.toggle('edit-mode', editMode);
+  document.getElementById('editToggle').classList.toggle('active', editMode);
+  document.getElementById('editToggle').innerHTML = editMode
+    ? `<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg> Terminé`
+    : `<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Modifier`;
+}
+
+function removeView(id) {
+  const v = views.find(x => x.id === id);
+  if (!v) return;
+  const count = bookmarks.filter(b => b.collection === id).length;
+  if (count > 0) {
+    if (!confirm(`Supprimer la vue "${v.name}" et déplacer ses ${count} favori(s) vers "Tous" ?`)) return;
+    bookmarks.forEach(b => { if (b.collection === id) b.collection = ''; });
+  }
+  views = views.filter(x => x.id !== id);
+  if (currentCollection === id) currentCollection = 'all';
+  renderPills();
+  filterCollection(currentCollection, null);
+  showToast('Vue supprimée');
+}
+
+// ── CREATE VIEW ──
+function openCreateView() {
+  document.getElementById('createViewWrap').classList.add('open');
+  setTimeout(() => document.getElementById('newViewName').focus(), 150);
+}
+function closeCreateView() {
+  document.getElementById('createViewWrap').classList.remove('open');
+  document.getElementById('newViewName').value = '';
+  pickedColor = '#c9ff5b';
+  document.querySelectorAll('.color-swatch').forEach((s, i) => s.classList.toggle('active', i === 0));
+}
+function pickColor(el) {
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  pickedColor = el.dataset.color;
+}
+function createView() {
+  const name = document.getElementById('newViewName').value.trim();
+  if (!name) { showToast('Donnez un nom'); return; }
+  const id = name.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 20) + '-' + Date.now().toString(36).slice(-3);
+  views.push({ id, name, color: pickedColor });
+  closeCreateView();
+  renderPills();
+  showToast('Vue "' + name + '" créée');
+}
+
+// ── RENDER COLLECTION GRID IN MODAL ──
+function renderModalColGrid() {
+  const grid = document.getElementById('modalColGrid');
+  grid.innerHTML = views.map(v => `
+    <div class="col-pick col-${v.id} ${pickedCol === v.id ? 'active' : ''}" data-col="${v.id}" onclick="pickCollection(this)">
+      <span class="col-pick-dot" style="background:${v.color}"></span> ${v.name}
+    </div>
+  `).join('');
+}
+
+// ── RENDER LIST ──
+function getFilteredData() {
+  let data = [...bookmarks];
+  if (currentCollection === 'pinned') data = data.filter(b => b.pinned);
+  else if (currentCollection === 'recent') data = data.filter(b => (now - b.addedAt) < 7*day);
+  else if (currentCollection !== 'all') data = data.filter(b => b.collection === currentCollection);
+
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  if (q) data = data.filter(b => b.title.toLowerCase().includes(q) || b.domain.includes(q));
+
+  // sort
+  if (currentSort === 'alpha') data.sort((a,b) => a.title.localeCompare(b.title, 'fr'));
+  else if (currentSort === 'usage') data.sort((a,b) => b.clicks - a.clicks);
+  else data.sort((a,b) => b.addedAt - a.addedAt);
+
+  return data;
+}
+
+function faviconHTML(domain, fallback) {
+  const src = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+  return `<img src="${src}" alt="" onerror="this.style.display='none';this.parentNode.textContent='${fallback}'">`;
+}
+
+function render() {
+  const data = getFilteredData();
+  const c = document.getElementById('container');
+  document.getElementById('resultsCount').textContent = data.length;
+  if (!data.length) {
+    c.innerHTML = `<div class="empty"><div class="empty-emoji">○</div>Aucun favori dans cette vue.<br><span style="font-size:11px;opacity:0.6">Appuyez sur ⌘K pour en ajouter un</span></div>`;
+    c.className = '';
+    return;
+  }
+  c.className = 'list-view';
+  c.innerHTML = data.map((b, i) => {
+    const v = views.find(x => x.id === b.collection);
+    const tagName = v ? v.name : '—';
+    const tagClass = v ? `tag-${v.id}` : '';
+    const meta = currentSort === 'usage' ? `${b.clicks} clics`
+               : currentSort === 'date' ? formatDate(b.addedAt)
+               : '';
+    return `
+      <div class="list-row c-${b.collection}" style="animation-delay:${i*15}ms" onclick="openLink(${b.id})">
+        <div class="favicon">${faviconHTML(b.domain, b.emoji)}</div>
+        <div class="list-title-wrap">
+          <div class="list-title">${b.pinned ? '<span style="color:var(--accent);margin-right:4px">★</span>' : ''}${b.title}</div>
+          ${meta ? `<div class="list-meta">${meta}</div>` : ''}
+        </div>
+        <div class="list-domain">${b.domain}</div>
+        <span class="list-tag ${tagClass}">${tagName}</span>
+        <div class="list-actions">
+          <button class="list-action ${b.pinned?'pinned':''}" onclick="event.stopPropagation();pinToggle(${b.id})" title="Épingler">
+            <svg width="13" height="13" fill="${b.pinned?'currentColor':'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          </button>
+          <button class="list-action edit" onclick="event.stopPropagation();editBookmark(${b.id})" title="Éditer">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </button>
+          <button class="list-action danger" onclick="event.stopPropagation();deleteBookmark(${b.id})" title="Supprimer">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function formatDate(ts) {
+  const diff = (now - ts) / day;
+  if (diff < 1) return 'Aujourd\'hui';
+  if (diff < 2) return 'Hier';
+  if (diff < 7) return `Il y a ${Math.floor(diff)}j`;
+  if (diff < 30) return `Il y a ${Math.floor(diff/7)} sem.`;
+  return `Il y a ${Math.floor(diff/30)} mois`;
+}
+
+function filterCollection(col, el) {
+  currentCollection = col;
+  document.querySelectorAll('.pill').forEach(n => {
+    if (!n.classList.contains('pill-add') && !n.classList.contains('pill-edit-toggle')) {
+      n.classList.remove('active');
+    }
+  });
+  if (el) el.classList.add('active');
+  render();
+}
+
+function onSearch() { render(); }
+
+// ── SORT ──
+function toggleSortMenu(e) {
+  e.stopPropagation();
+  document.getElementById('sortMenu').classList.toggle('open');
+}
+document.addEventListener('click', () => document.getElementById('sortMenu').classList.remove('open'));
+
+function setSort(sort, label) {
+  currentSort = sort;
+  document.getElementById('currentSort').textContent = label;
+  document.querySelectorAll('.sort-option').forEach(o => o.classList.toggle('active', o.dataset.sort === sort));
+  document.getElementById('sortMenu').classList.remove('open');
+  render();
+}
+
+// ── ACTIONS ──
+function openLink(id) {
+  const b = bookmarks.find(x => x.id === id);
+  if (!b) return;
+  b.clicks++;
+  showToast('Ouverture · ' + b.domain);
+  if (currentSort === 'usage') render();
+}
+function pinToggle(id) {
+  const b = bookmarks.find(x => x.id === id);
+  if (b) {
+    b.pinned = !b.pinned;
+    showToast(b.pinned ? 'Épinglé' : 'Désépinglé');
+    renderPills();
+    render();
+  }
+}
+function deleteBookmark(id) {
+  const b = bookmarks.find(x => x.id === id);
+  if (!b) return;
+  if (!confirm(`Supprimer "${b.title}" ?`)) return;
+  bookmarks = bookmarks.filter(x => x.id !== id);
+  renderPills();
+  render();
+  showToast('Supprimé');
+}
+
+function editBookmark(id) {
+  const b = bookmarks.find(x => x.id === id);
+  if (!b) return;
+  editingBookmarkId = id;
+  pickedCol = b.collection || views[0].id;
+  document.getElementById('paletteUrl').value = b.url;
+  document.getElementById('paletteTitle').value = b.title;
+  document.getElementById('paletteTags').value = '';
+  document.getElementById('saveBtnLabel').textContent = 'Mettre à jour';
+  document.getElementById('palettePreview').classList.add('show');
+  document.getElementById('ppFavicon').innerHTML = faviconHTML(b.domain, b.emoji);
+  document.getElementById('ppTitle').textContent = b.title;
+  document.getElementById('ppUrl').textContent = b.url;
+  renderModalColGrid();
+  document.getElementById('paletteWrap').classList.add('open');
+  setTimeout(() => document.getElementById('paletteTitle').focus(), 150);
+}
+
+// ── MODAL ──
+function openPalette() {
+  editingBookmarkId = null;
+  pickedCol = views[0]?.id || 'work';
+  document.getElementById('saveBtnLabel').textContent = 'Enregistrer';
+  renderModalColGrid();
+  document.getElementById('paletteWrap').classList.add('open');
+  setTimeout(() => document.getElementById('paletteUrl').focus(), 150);
+}
+function resetViewport() {
+  // Force iOS to reset zoom after dismissing a modal with inputs
+  const meta = document.querySelector('meta[name="viewport"]');
+  if (!meta) return;
+  const original = meta.content;
+  meta.content = original + ', maximum-scale=1';
+  requestAnimationFrame(() => { meta.content = original; });
+}
+
+function closePalette() {
+  document.getElementById('paletteWrap').classList.remove('open');
+  document.getElementById('paletteUrl').value = '';
+  document.getElementById('paletteTitle').value = '';
+  document.getElementById('paletteTags').value = '';
+  document.getElementById('palettePreview').classList.remove('show');
+  editingBookmarkId = null;
+  resetViewport();
+}
+
+function closeCreateView() {
+  document.getElementById('createViewWrap').classList.remove('open');
+  document.getElementById('newViewName').value = '';
+  pickedColor = '#c9ff5b';
+  document.querySelectorAll('.color-swatch').forEach((s, i) => s.classList.toggle('active', i === 0));
+  resetViewport();
+}
+
+function handleModalClick(e, id) { if (e.target.id === id) (id === 'paletteWrap' ? closePalette() : closeCreateView()); }
+
+let fetchTimer;
+function onPaletteInput() {
+  const raw = document.getElementById('paletteUrl').value.trim();
+  clearTimeout(fetchTimer);
+  if (!raw || !raw.includes('.')) {
+    document.getElementById('palettePreview').classList.remove('show');
+    return;
+  }
+  // Add scheme if missing
+  const url = raw.startsWith('http') ? raw : 'https://' + raw;
+  document.getElementById('palettePreview').classList.add('show');
+  document.getElementById('ppTitle').innerHTML = '<span class="pp-loading">Récupération…</span>';
+  document.getElementById('ppUrl').textContent = '';
+  document.getElementById('ppFavicon').innerHTML = '';
+
+  fetchTimer = setTimeout(() => fetchMeta(url), 700);
+}
+
+async function fetchMeta(url) {
+  try {
+    const domain = url.replace(/https?:\/\/(www\.)?/, '').split('/')[0];
+    // Show favicon immediately via Google
+    document.getElementById('ppFavicon').innerHTML = faviconHTML(domain, domain[0].toUpperCase());
+
+    // Fetch page HTML via allorigins CORS proxy to extract <title>
+    const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const res = await fetch(proxy, { signal: AbortSignal.timeout(6000) });
+    const json = await res.json();
+    const html = json.contents || '';
+
+    // Extract <title>
+    const titleMatch = html.match(/<title[^>]*>([^<]{1,200})<\/title>/i);
+    let title = titleMatch ? titleMatch[1].trim().replace(/&amp;/g,'&').replace(/&#039;/g,"'").replace(/&quot;/g,'"') : domain;
+
+    document.getElementById('ppTitle').textContent = title;
+    document.getElementById('ppUrl').textContent = url;
+    if (!document.getElementById('paletteTitle').value) {
+      document.getElementById('paletteTitle').value = title;
+    }
+  } catch {
+    // Fallback: just use domain as title
+    const domain = url.replace(/https?:\/\/(www\.)?/, '').split('/')[0];
+    document.getElementById('ppTitle').textContent = domain;
+    document.getElementById('ppUrl').textContent = url;
+    document.getElementById('ppFavicon').innerHTML = faviconHTML(domain, domain[0].toUpperCase());
+    if (!document.getElementById('paletteTitle').value) {
+      document.getElementById('paletteTitle').value = domain;
+    }
+  }
+}
+
+function pickCollection(el) {
+  document.querySelectorAll('.col-pick').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  pickedCol = el.dataset.col;
+}
+
+function saveBookmark() {
+  const raw = document.getElementById('paletteUrl').value.trim();
+  if (!raw) { showToast('Aucune URL'); return; }
+  const url = raw.startsWith('http') ? raw : 'https://' + raw;
+  const title = document.getElementById('paletteTitle').value.trim() || document.getElementById('ppTitle').textContent;
+  const domain = url.replace(/https?:\/\/(www\.)?/,'').split('/')[0];
+  const faviconEl = document.getElementById('ppFavicon');
+  const emoji = domain[0]?.toUpperCase() || '○';
+
+  if (editingBookmarkId) {
+    const b = bookmarks.find(x => x.id === editingBookmarkId);
+    if (b) {
+      b.url = url; b.title = title; b.domain = domain; b.emoji = emoji; b.collection = pickedCol;
+      showToast('Favori mis à jour');
+    }
+  } else {
+    bookmarks.unshift({
+      id: Date.now(), title, url, domain, emoji, collection: pickedCol, pinned: false, addedAt: now, clicks: 0
+    });
+    showToast('Favori ajouté');
+  }
+  closePalette();
+  renderPills();
+  render();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window.tt);
+  window.tt = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// KEYBOARD SHORTCUTS
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openPalette(); }
+  else if (e.key === 'Escape') { closePalette(); closeCreateView(); }
+  else if (e.key === '/' && !document.activeElement.matches('input')) { e.preventDefault(); document.getElementById('searchInput').focus(); }
+  else if (e.key === 'n' && !document.activeElement.matches('input')) openPalette();
+  else if (e.key === 'Enter' && (document.activeElement.id === 'paletteUrl' || document.activeElement.id === 'paletteTitle')) saveBookmark();
+  else if (e.key === 'Enter' && document.activeElement.id === 'newViewName') createView();
+});
+
+document.getElementById('paletteUrl').addEventListener('paste', () => setTimeout(onPaletteInput, 50));
+document.getElementById('searchInput').addEventListener('blur', resetViewport);
+
+// INIT
+renderPills();
+render();
+</script>
+</body>
+</html>
