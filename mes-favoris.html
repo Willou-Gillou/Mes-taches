@@ -1,9 +1,10 @@
 <!DOCTYPE html>
+<!-- Mes Favoris v1.0.2 — https://github.com/[votre-repo] -->
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Mes Favoris</title>
+<title>Mes Favoris — v1.0.2</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -21,7 +22,44 @@
     --accent-glow: rgba(201, 255, 91, 0.15);
     --radius: 10px;
     --shadow-lift: 0 0 0 1px rgba(255,255,255,0.04), 0 8px 24px rgba(0,0,0,0.5);
+    --topbar-bg: rgba(8,8,10,0.8);
   }
+
+  /* ── LIGHT MODE ── */
+  html.light {
+    --bg: #f5f5f7;
+    --bg-2: #ebebee;
+    --surface: #ffffff;
+    --surface-2: #f0f0f4;
+    --surface-3: #e4e4ea;
+    --border: #dddde6;
+    --border-bright: #c8c8d8;
+    --text: #0f0f14;
+    --text-2: #5a5a72;
+    --text-3: #9898b0;
+    --accent: #7c5cfc;
+    --accent-glow: rgba(124, 92, 252, 0.15);
+    --shadow-lift: 0 0 0 1px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.1);
+    --topbar-bg: rgba(245,245,247,0.85);
+  }
+
+  /* Smooth theme transition */
+  *, *::before, *::after {
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  }
+  /* Except animations — don't interfere */
+  .list-row, .modal, .palette, .pill { transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.18s cubic-bezier(0.4,0,0.2,1), opacity 0.18s ease; }
+
+  /* Theme toggle button */
+  .theme-toggle {
+    width: 32px; height: 32px;
+    border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text-2);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover { background: var(--surface-2); color: var(--text); border-color: var(--border-bright); }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
@@ -72,7 +110,7 @@
     height: 50px;
     flex-shrink: 0;
     border-bottom: 1px solid var(--border);
-    background: rgba(8,8,10,0.7);
+    background: var(--topbar-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     gap: 12px;
@@ -610,7 +648,7 @@
   /* iOS fix — prevent auto-zoom on input focus (triggered when font-size < 16px) */
   @supports (-webkit-touch-callout: none) {
     .modal-field, .modal-input, .palette-input, .palette-tags-input,
-    .topbar-search input {
+    .topbar-search input, #authToken, #authGist, #authFilename, #newViewName {
       font-size: 16px !important;
     }
   }
@@ -778,6 +816,86 @@
 </head>
 <body>
 
+<!-- ── AUTH SCREEN ── -->
+<div id="authScreen" style="display:none;position:fixed;inset:0;z-index:2000;background:var(--bg);
+  align-items:center;justify-content:center;flex-direction:column;gap:0;padding:20px;">
+  <div style="width:100%;max-width:420px;background:var(--surface);border:1px solid var(--border-bright);
+    border-radius:16px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.7)">
+    <!-- Header -->
+    <div style="padding:28px 28px 0">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px">
+        <div style="width:28px;height:28px;background:var(--accent);border-radius:7px;position:relative;box-shadow:0 0 16px var(--accent-glow)">
+          <span style="position:absolute;inset:7px;background:var(--bg);border-radius:2px;display:block"></span>
+        </div>
+        <span style="font-family:'Instrument Serif',serif;font-style:italic;font-size:22px;letter-spacing:-.02em">Mes favoris</span>
+      </div>
+      <p style="font-size:12.5px;color:var(--text-2);margin-bottom:22px;line-height:1.6">
+        Connectez votre compte GitHub pour stocker vos favoris dans un Gist privé.
+        Accessible depuis n'importe quel appareil.
+      </p>
+
+      <!-- Token -->
+      <div style="margin-bottom:14px">
+        <div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.1em;color:var(--text-3);text-transform:uppercase;margin-bottom:6px">
+          Personal Access Token GitHub
+        </div>
+        <input id="authToken" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+          style="width:100%;height:38px;padding:0 12px;background:var(--bg-2);border:1px solid var(--border);
+          border-radius:8px;color:var(--text);font-family:'Geist Mono',monospace;font-size:12px;outline:none">
+        <div style="font-size:11px;color:var(--text-3);margin-top:5px">
+          <a href="https://github.com/settings/tokens/new?scopes=gist&description=Mes+Favoris"
+             target="_blank" rel="noopener"
+             style="color:var(--accent);text-decoration:none">Créer un token</a>
+          · scope requis : <code style="font-family:'Geist Mono',monospace;background:var(--surface-2);padding:1px 5px;border-radius:3px">gist</code>
+        </div>
+      </div>
+
+      <!-- Gist ID (optional) -->
+      <div style="margin-bottom:14px">
+        <div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.1em;color:var(--text-3);text-transform:uppercase;margin-bottom:6px">
+          Gist ID existant <span style="color:var(--text-3);font-weight:400;letter-spacing:0;text-transform:none;font-family:'Geist',sans-serif"> — laisser vide pour en créer un nouveau</span>
+        </div>
+        <input id="authGist" type="text" placeholder="a1b2c3d4e5f6… (optionnel)"
+          style="width:100%;height:38px;padding:0 12px;background:var(--bg-2);border:1px solid var(--border);
+          border-radius:8px;color:var(--text);font-family:'Geist Mono',monospace;font-size:12px;outline:none">
+      </div>
+
+      <!-- Filename -->
+      <div style="margin-bottom:20px">
+        <div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.1em;color:var(--text-3);text-transform:uppercase;margin-bottom:6px">
+          Nom du fichier JSON dans le Gist
+        </div>
+        <input id="authFilename" type="text" placeholder="mes-favoris.json"
+          style="width:100%;height:38px;padding:0 12px;background:var(--bg-2);border:1px solid var(--border);
+          border-radius:8px;color:var(--text);font-family:'Geist Mono',monospace;font-size:12px;outline:none">
+        <div style="font-size:11px;color:var(--text-3);margin-top:5px">
+          Laissez vide pour utiliser <code style="font-family:'Geist Mono',monospace;background:var(--surface-2);padding:1px 5px;border-radius:3px">mes-favoris.json</code> — si votre fichier s'appelle <code style="font-family:'Geist Mono',monospace;background:var(--surface-2);padding:1px 5px;border-radius:3px">favoris.json</code>, indiquez-le ici.
+        </div>
+      </div>
+
+      <div id="authError" style="display:none;background:rgba(255,112,136,.1);border:1px solid rgba(255,112,136,.3);
+        color:#ff7088;border-radius:7px;padding:9px 12px;font-size:12px;margin-bottom:14px"></div>
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:16px 28px 24px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--text-3);line-height:1.5">
+        Token stocké localement.<br>Aucune donnée envoyée à un tiers.
+      </div>
+      <button id="connectBtn" onclick="handleConnect()"
+        style="height:36px;padding:0 20px;background:var(--accent);color:#0a0a0a;border:none;
+        border-radius:8px;font-family:'Geist',sans-serif;font-size:13px;font-weight:700;
+        cursor:pointer;white-space:nowrap;transition:all .15s"
+        onmouseover="this.style.background='#d6ff7a'" onmouseout="this.style.background='var(--accent)'">
+        Connecter →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── APP CONTENT ── -->
+<div id="appContent">
+
 <div class="app">
 
   <!-- TOP BAR -->
@@ -798,10 +916,18 @@
     <button class="topbar-btn icon-btn" title="Importer">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
     </button>
-    <button class="topbar-btn icon-btn" title="Réglages">
+    <button class="theme-toggle" id="themeToggle" title="Mode clair / sombre">
+      <!-- icon injected by JS -->
+    </button>
+    <button class="topbar-btn icon-btn" id="settingsBtn" title="Réglages / Déconnecter">
       <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
     </button>
-    <div class="avatar">JC</div>
+    <!-- Sync indicator -->
+    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+      <span id="syncDot" style="width:6px;height:6px;border-radius:50%;background:var(--text-3);transition:background .3s;flex-shrink:0"></span>
+      <span id="syncLabel" style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--text-3);min-width:60px"></span>
+    </div>
+    <div class="avatar" title="">JC</div>
   </div>
 
   <!-- MAIN -->
@@ -885,6 +1011,8 @@
     </div><!-- content -->
   </div><!-- main -->
 </div><!-- app -->
+
+</div><!-- appContent -->
 
 <!-- ADD/EDIT BOOKMARK MODAL -->
 <div class="modal-wrap" id="paletteWrap" onclick="handleModalClick(event, 'paletteWrap')">
@@ -988,80 +1116,263 @@
 <div class="toast" id="toast"><span class="toast-dot"></span> <span id="toastMsg">—</span></div>
 
 <script>
-// ── DATA ──
-let views = [
-  { id: 'work', name: 'Travail', color: '#c9ff5b' },
-  { id: 'design', name: 'Design', color: '#ff6b9d' },
-  { id: 'dev', name: 'Dev', color: '#6cb4ff' },
-  { id: 'news', name: 'Actualités', color: '#ffb84d' },
-  { id: 'perso', name: 'Personnel', color: '#b88aff' },
-];
+// ═══════════════════════════════════════════════════
+// ── GITHUB GIST BACKEND
+// ═══════════════════════════════════════════════════
+
+const LS_TOKEN    = 'mf_gh_token';
+const LS_GIST     = 'mf_gist_id';
+const LS_FILENAME = 'mf_filename';
+const DEFAULT_FILENAME = 'mes-favoris.json';
+
+let ghToken   = localStorage.getItem(LS_TOKEN)    || '';
+let gistId    = localStorage.getItem(LS_GIST)     || '';
+let gistFile  = localStorage.getItem(LS_FILENAME) || DEFAULT_FILENAME;
+let syncTimer = null;
+let isSyncing = false;
+
+// ── API HELPERS ──
+async function ghFetch(path, opts = {}) {
+  const res = await fetch(`https://api.github.com${path}`, {
+    ...opts,
+    headers: {
+      'Authorization': `Bearer ${ghToken}`,
+      'Accept': 'application/vnd.github+json',
+      'Content-Type': 'application/json',
+      ...(opts.headers || {})
+    }
+  });
+  if (!res.ok) throw new Error(`GitHub ${res.status}: ${await res.text()}`);
+  return res.json();
+}
+
+async function loadFromGist() {
+  const gist = await ghFetch(`/gists/${gistId}`);
+  const raw  = gist.files[gistFile]?.content;
+  if (!raw) throw new Error('Fichier introuvable dans le Gist');
+  return JSON.parse(raw);
+}
+
+async function saveToGist(data) {
+  await ghFetch(`/gists/${gistId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      files: { [gistFile]: { content: JSON.stringify(data, null, 2) } }
+    })
+  });
+}
+
+async function createGist() {
+  const initial = { views: defaultViews, bookmarks: [] };
+  const gist = await ghFetch('/gists', {
+    method: 'POST',
+    body: JSON.stringify({
+      description: 'Mes Favoris — données',
+      public: false,
+      files: { [gistFile]: { content: JSON.stringify(initial, null, 2) } }
+    })
+  });
+  return gist.id;
+}
+
+// ── SYNC STATUS ──
+function setSyncStatus(status) {
+  // status: 'idle' | 'syncing' | 'ok' | 'error'
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  if (!dot) return;
+  const map = {
+    idle:    { color: 'var(--text-3)', label: '' },
+    syncing: { color: '#ffb84d',       label: 'Sync…' },
+    ok:      { color: 'var(--accent)', label: 'Sauvegardé' },
+    error:   { color: '#ff7088',       label: 'Erreur sync' }
+  };
+  const s = map[status] || map.idle;
+  dot.style.background = s.color;
+  lbl.textContent = s.label;
+  if (status === 'ok') setTimeout(() => { lbl.textContent = ''; }, 2500);
+}
+
+function scheduleSave() {
+  clearTimeout(syncTimer);
+  setSyncStatus('syncing');
+  syncTimer = setTimeout(async () => {
+    try {
+      await saveToGist({ views, bookmarks });
+      setSyncStatus('ok');
+    } catch(e) {
+      setSyncStatus('error');
+      showToast('⚠ Erreur de sauvegarde');
+    }
+  }, 1500);
+}
+
+// ═══════════════════════════════════════════════════
+// ── AUTH SCREEN
+// ═══════════════════════════════════════════════════
+
+function showAuthScreen() {
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('appContent').style.display = 'none';
+}
+
+function hideAuthScreen() {
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('appContent').style.display = '';
+}
+
+async function handleConnect() {
+  const token    = document.getElementById('authToken').value.trim();
+  const gist     = document.getElementById('authGist').value.trim();
+  const filename = document.getElementById('authFilename').value.trim() || DEFAULT_FILENAME;
+  if (!token) { authError('Token requis'); return; }
+
+  setAuthLoading(true);
+  try {
+    ghToken  = token;
+    gistFile = filename;
+
+    const user = await ghFetch('/user');
+
+    if (gist) {
+      gistId = gist;
+      // Try to load — auto-detect file if not found under given name
+      const gistData = await ghFetch(`/gists/${gistId}`);
+      const files = Object.keys(gistData.files);
+      if (!gistData.files[gistFile]) {
+        // File not found — suggest existing files
+        const jsonFiles = files.filter(f => f.endsWith('.json'));
+        if (jsonFiles.length === 1) {
+          // Auto-fix: use the only JSON file found
+          gistFile = jsonFiles[0];
+          document.getElementById('authFilename').value = gistFile;
+        } else if (jsonFiles.length > 1) {
+          authError(`Fichier "${gistFile}" introuvable. Fichiers JSON disponibles : ${jsonFiles.join(', ')}`);
+          setAuthLoading(false); return;
+        } else {
+          authError(`Fichier "${gistFile}" introuvable dans ce Gist. Fichiers disponibles : ${files.join(', ')}`);
+          setAuthLoading(false); return;
+        }
+      }
+    } else {
+      gistId = await createGist();
+    }
+
+    localStorage.setItem(LS_TOKEN,    token);
+    localStorage.setItem(LS_GIST,     gistId);
+    localStorage.setItem(LS_FILENAME, gistFile);
+
+    const initials = (user.name || user.login || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+    document.querySelector('.avatar').textContent = initials;
+    document.querySelector('.avatar').title = user.login;
+
+    await initApp();
+    hideAuthScreen();
+  } catch(e) {
+    authError('Connexion échouée : ' + (e.message || 'vérifiez le token et le Gist ID'));
+  }
+  setAuthLoading(false);
+}
+
+function handleDisconnect() {
+  localStorage.removeItem(LS_TOKEN);
+  localStorage.removeItem(LS_GIST);
+  ghToken = ''; gistId = '';
+  location.reload();
+}
+
+function authError(msg) {
+  const el = document.getElementById('authError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function setAuthLoading(on) {
+  const btn = document.getElementById('connectBtn');
+  btn.textContent = on ? 'Connexion…' : 'Connecter';
+  btn.disabled = on;
+}
+
+// ═══════════════════════════════════════════════════
+// ── APP STATE
+// ═══════════════════════════════════════════════════
 
 const now = Date.now();
 const day = 86400000;
-let bookmarks = [
-  { id:1, title:"Notion", url:"https://notion.so", domain:"notion.so", emoji:"N", collection:"work", pinned:true, addedAt: now - 30*day, clicks: 142 },
-  { id:2, title:"Figma", url:"https://figma.com", domain:"figma.com", emoji:"F", collection:"design", pinned:true, addedAt: now - 25*day, clicks: 89 },
-  { id:3, title:"GitHub", url:"https://github.com", domain:"github.com", emoji:"⌥", collection:"dev", pinned:true, addedAt: now - 60*day, clicks: 215 },
-  { id:4, title:"Le Monde", url:"https://lemonde.fr", domain:"lemonde.fr", emoji:"M", collection:"news", pinned:false, addedAt: now - 2*day, clicks: 34 },
-  { id:5, title:"Dribbble", url:"https://dribbble.com", domain:"dribbble.com", emoji:"D", collection:"design", pinned:false, addedAt: now - 4*day, clicks: 22 },
-  { id:6, title:"Linear", url:"https://linear.app", domain:"linear.app", emoji:"L", collection:"work", pinned:false, addedAt: now - 1*day, clicks: 67 },
-  { id:7, title:"MDN Web Docs", url:"https://developer.mozilla.org", domain:"mozilla.org", emoji:"M", collection:"dev", pinned:false, addedAt: now - 90*day, clicks: 178 },
-  { id:8, title:"Coolors", url:"https://coolors.co", domain:"coolors.co", emoji:"C", collection:"design", pinned:false, addedAt: now - 50*day, clicks: 12 },
-  { id:9, title:"Hacker News", url:"https://news.ycombinator.com", domain:"ycombinator.com", emoji:"Y", collection:"news", pinned:false, addedAt: now - 3*day, clicks: 56 },
-  { id:10, title:"Slack", url:"https://slack.com", domain:"slack.com", emoji:"S", collection:"work", pinned:false, addedAt: now - 15*day, clicks: 8 },
-  { id:11, title:"Basecamp", url:"https://basecamp.com", domain:"basecamp.com", emoji:"B", collection:"work", pinned:false, addedAt: now - 40*day, clicks: 4 },
-  { id:12, title:"Airbnb", url:"https://airbnb.fr", domain:"airbnb.fr", emoji:"A", collection:"perso", pinned:false, addedAt: now - 5*day, clicks: 19 },
+
+const defaultViews = [
+  { id: 'work',   name: 'Travail',    color: '#c9ff5b' },
+  { id: 'design', name: 'Design',     color: '#ff6b9d' },
+  { id: 'dev',    name: 'Dev',        color: '#6cb4ff' },
+  { id: 'news',   name: 'Actualités', color: '#ffb84d' },
+  { id: 'perso',  name: 'Personnel',  color: '#b88aff' },
 ];
 
+let views     = defaultViews;
+let bookmarks = [];
+
 let currentCollection = 'all';
-let currentSort = 'usage';
-let pickedCol = 'work';
-let pickedColor = '#c9ff5b';
-let editMode = false;
+let currentSort       = 'usage';
+let pickedCol         = 'work';
+let pickedColor       = '#c9ff5b';
+let editMode          = false;
 let editingBookmarkId = null;
 
-// ── INJECT VIEW STYLES DYNAMICALLY ──
+async function initApp() {
+  try {
+    const data = await loadFromGist();
+    views     = data.views     || defaultViews;
+    bookmarks = (data.bookmarks || []).map(b => ({
+      ...b,
+      addedAt: b.addedAt || now,
+      clicks:  b.clicks  || 0,
+    }));
+  } catch(e) {
+    // New gist or parse error — start fresh
+    views     = defaultViews;
+    bookmarks = [];
+  }
+  renderPills();
+  render();
+}
+
+// ── INJECT DYNAMIC STYLES ──
 const styleEl = document.createElement('style');
 document.head.appendChild(styleEl);
 
 function injectViewStyles() {
   let css = '';
   views.forEach(v => {
-    const c = v.color;
-    const rgb = hexToRgb(c);
+    const rgb = hexToRgb(v.color);
     css += `
-      .c-${v.id} { --c-color: ${c}; }
-      .pill.active.col-${v.id} { background: rgba(${rgb},0.08); border-color: rgba(${rgb},0.35); color: ${c}; }
-      .tag-${v.id} { color: ${c}; border-color: rgba(${rgb},0.25); background: rgba(${rgb},0.08); }
-      .col-pick.active.col-${v.id} { background: rgba(${rgb},0.1); border-color: rgba(${rgb},0.4); }
+      .c-${v.id}  { --c-color: ${v.color}; }
+      .pill.active.col-${v.id} { background:rgba(${rgb},.08); border-color:rgba(${rgb},.35); color:${v.color}; }
+      .tag-${v.id}             { color:${v.color}; border-color:rgba(${rgb},.25); background:rgba(${rgb},.08); }
+      .col-pick.active.col-${v.id} { background:rgba(${rgb},.1); border-color:rgba(${rgb},.4); }
     `;
   });
   styleEl.textContent = css;
 }
+
 function hexToRgb(hex) {
-  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
   return `${r},${g},${b}`;
 }
 
-// ── RENDER PILLS ──
+// ── PILLS ──
 function renderPills() {
   const row = document.getElementById('customPills');
-  // remove old custom pills (keep add and edit-toggle buttons)
   Array.from(row.querySelectorAll('.pill')).forEach(p => {
     if (!p.classList.contains('pill-add') && !p.classList.contains('pill-edit-toggle')) p.remove();
   });
-  // insert before pill-add
   const addBtn = row.querySelector('.pill-add');
   views.forEach(v => {
     const count = bookmarks.filter(b => b.collection === v.id).length;
-    const pill = document.createElement('div');
+    const pill  = document.createElement('div');
     pill.className = `pill editable col-${v.id} ${currentCollection === v.id ? 'active' : ''}`;
     pill.dataset.col = v.id;
-    pill.onclick = (e) => {
-      if (e.target.closest('.pill-remove')) return;
-      filterCollection(v.id, pill);
-    };
+    pill.onclick = (e) => { if (!e.target.closest('.pill-remove')) filterCollection(v.id, pill); };
     pill.innerHTML = `
       <span class="pill-dot" style="background:${v.color}"></span>
       ${v.name}
@@ -1077,18 +1388,18 @@ function renderPills() {
 }
 
 function updateCounts() {
-  document.getElementById('count-all').textContent = bookmarks.length;
+  document.getElementById('count-all').textContent    = bookmarks.length;
   document.getElementById('count-pinned').textContent = bookmarks.filter(b => b.pinned).length;
-  const recent = bookmarks.filter(b => (now - b.addedAt) < 7*day).length;
-  document.getElementById('count-recent').textContent = recent;
+  document.getElementById('count-recent').textContent = bookmarks.filter(b => (now - b.addedAt) < 7*day).length;
 }
 
 // ── EDIT MODE ──
 function toggleEditMode() {
   editMode = !editMode;
   document.getElementById('pillsStack').classList.toggle('edit-mode', editMode);
-  document.getElementById('editToggle').classList.toggle('active', editMode);
-  document.getElementById('editToggle').innerHTML = editMode
+  const btn = document.getElementById('editToggle');
+  btn.classList.toggle('active', editMode);
+  btn.innerHTML = editMode
     ? `<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg> Terminé`
     : `<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Modifier`;
 }
@@ -1098,13 +1409,14 @@ function removeView(id) {
   if (!v) return;
   const count = bookmarks.filter(b => b.collection === id).length;
   if (count > 0) {
-    if (!confirm(`Supprimer la vue "${v.name}" et déplacer ses ${count} favori(s) vers "Tous" ?`)) return;
+    if (!confirm(`Supprimer la vue "${v.name}" et déplacer ses ${count} favori(s) dans la vue Tous ?`)) return;
     bookmarks.forEach(b => { if (b.collection === id) b.collection = ''; });
   }
   views = views.filter(x => x.id !== id);
   if (currentCollection === id) currentCollection = 'all';
   renderPills();
   filterCollection(currentCollection, null);
+  scheduleSave();
   showToast('Vue supprimée');
 }
 
@@ -1118,6 +1430,7 @@ function closeCreateView() {
   document.getElementById('newViewName').value = '';
   pickedColor = '#c9ff5b';
   document.querySelectorAll('.color-swatch').forEach((s, i) => s.classList.toggle('active', i === 0));
+  resetViewport();
 }
 function pickColor(el) {
   document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
@@ -1126,20 +1439,20 @@ function pickColor(el) {
 }
 function createView() {
   const name = document.getElementById('newViewName').value.trim();
-  if (!name) { showToast('Donnez un nom'); return; }
+  if (!name) { showToast('Donnez un nom à la vue'); return; }
   const id = name.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 20) + '-' + Date.now().toString(36).slice(-3);
   views.push({ id, name, color: pickedColor });
   closeCreateView();
   renderPills();
-  showToast('Vue "' + name + '" créée');
+  scheduleSave();
+  showToast(`Vue "${name}" créée`);
 }
 
-// ── RENDER COLLECTION GRID IN MODAL ──
+// ── MODAL COL GRID ──
 function renderModalColGrid() {
-  const grid = document.getElementById('modalColGrid');
-  grid.innerHTML = views.map(v => `
+  document.getElementById('modalColGrid').innerHTML = views.map(v => `
     <div class="col-pick col-${v.id} ${pickedCol === v.id ? 'active' : ''}" data-col="${v.id}" onclick="pickCollection(this)">
-      <span class="col-pick-dot" style="background:${v.color}"></span> ${v.name}
+      <span class="col-pick-dot" style="background:${v.color}"></span>${v.name}
     </div>
   `).join('');
 }
@@ -1147,52 +1460,63 @@ function renderModalColGrid() {
 // ── RENDER LIST ──
 function getFilteredData() {
   let data = [...bookmarks];
-  if (currentCollection === 'pinned') data = data.filter(b => b.pinned);
+  if      (currentCollection === 'pinned') data = data.filter(b => b.pinned);
   else if (currentCollection === 'recent') data = data.filter(b => (now - b.addedAt) < 7*day);
-  else if (currentCollection !== 'all') data = data.filter(b => b.collection === currentCollection);
+  else if (currentCollection !== 'all')    data = data.filter(b => b.collection === currentCollection);
 
   const q = document.getElementById('searchInput').value.toLowerCase();
   if (q) data = data.filter(b => b.title.toLowerCase().includes(q) || b.domain.includes(q));
 
-  // sort
-  if (currentSort === 'alpha') data.sort((a,b) => a.title.localeCompare(b.title, 'fr'));
+  if      (currentSort === 'alpha') data.sort((a,b) => a.title.localeCompare(b.title, 'fr'));
   else if (currentSort === 'usage') data.sort((a,b) => b.clicks - a.clicks);
-  else data.sort((a,b) => b.addedAt - a.addedAt);
+  else                              data.sort((a,b) => b.addedAt - a.addedAt);
 
   return data;
 }
 
 function faviconHTML(domain, fallback) {
-  const src = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
-  return `<img src="${src}" alt="" onerror="this.style.display='none';this.parentNode.textContent='${fallback}'">`;
+  const safe = (fallback || '?').replace(/'/g, '');
+  return `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=32" alt=""
+    onerror="this.style.display='none';this.parentNode.textContent='${safe}'">`;
+}
+
+function formatDate(ts) {
+  const diff = (now - ts) / day;
+  if (diff < 1)  return 'Aujourd\'hui';
+  if (diff < 2)  return 'Hier';
+  if (diff < 7)  return `Il y a ${Math.floor(diff)}j`;
+  if (diff < 30) return `Il y a ${Math.floor(diff/7)} sem.`;
+  return `Il y a ${Math.floor(diff/30)} mois`;
 }
 
 function render() {
   const data = getFilteredData();
   const c = document.getElementById('container');
   document.getElementById('resultsCount').textContent = data.length;
+
   if (!data.length) {
-    c.innerHTML = `<div class="empty"><div class="empty-emoji">○</div>Aucun favori dans cette vue.<br><span style="font-size:11px;opacity:0.6">Appuyez sur ⌘K pour en ajouter un</span></div>`;
     c.className = '';
+    c.innerHTML = `<div class="empty"><div class="empty-emoji">○</div>Aucun favori dans cette vue.<br>
+      <span style="font-size:11px;opacity:.6">Appuyez sur N ou ⌘K pour en ajouter un</span></div>`;
     return;
   }
+
   c.className = 'list-view';
   c.innerHTML = data.map((b, i) => {
-    const v = views.find(x => x.id === b.collection);
+    const v       = views.find(x => x.id === b.collection);
     const tagName = v ? v.name : '—';
-    const tagClass = v ? `tag-${v.id}` : '';
-    const meta = currentSort === 'usage' ? `${b.clicks} clics`
-               : currentSort === 'date' ? formatDate(b.addedAt)
-               : '';
+    const tagCls  = v ? `tag-${v.id}` : '';
+    const meta    = currentSort === 'usage' ? `${b.clicks} clic${b.clicks !== 1 ? 's' : ''}`
+                  : currentSort === 'date'  ? formatDate(b.addedAt) : '';
     return `
-      <div class="list-row c-${b.collection}" style="animation-delay:${i*15}ms" onclick="openLink(${b.id})">
+      <div class="list-row c-${b.collection}" style="animation-delay:${i*12}ms" onclick="openLink(${b.id})">
         <div class="favicon">${faviconHTML(b.domain, b.emoji)}</div>
         <div class="list-title-wrap">
-          <div class="list-title">${b.pinned ? '<span style="color:var(--accent);margin-right:4px">★</span>' : ''}${b.title}</div>
+          <div class="list-title">${b.pinned ? '<span style="color:var(--accent);margin-right:4px">★</span>' : ''}${escHtml(b.title)}</div>
           ${meta ? `<div class="list-meta">${meta}</div>` : ''}
         </div>
         <div class="list-domain">${b.domain}</div>
-        <span class="list-tag ${tagClass}">${tagName}</span>
+        <span class="list-tag ${tagCls}">${tagName}</span>
         <div class="list-actions">
           <button class="list-action ${b.pinned?'pinned':''}" onclick="event.stopPropagation();pinToggle(${b.id})" title="Épingler">
             <svg width="13" height="13" fill="${b.pinned?'currentColor':'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
@@ -1204,26 +1528,20 @@ function render() {
             <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
           </button>
         </div>
-      </div>
-    `;
+      </div>`;
   }).join('');
 }
 
-function formatDate(ts) {
-  const diff = (now - ts) / day;
-  if (diff < 1) return 'Aujourd\'hui';
-  if (diff < 2) return 'Hier';
-  if (diff < 7) return `Il y a ${Math.floor(diff)}j`;
-  if (diff < 30) return `Il y a ${Math.floor(diff/7)} sem.`;
-  return `Il y a ${Math.floor(diff/30)} mois`;
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ── FILTER / SORT ──
 function filterCollection(col, el) {
   currentCollection = col;
-  document.querySelectorAll('.pill').forEach(n => {
-    if (!n.classList.contains('pill-add') && !n.classList.contains('pill-edit-toggle')) {
-      n.classList.remove('active');
-    }
+  document.querySelectorAll('.pill').forEach(p => {
+    if (!p.classList.contains('pill-add') && !p.classList.contains('pill-edit-toggle'))
+      p.classList.remove('active');
   });
   if (el) el.classList.add('active');
   render();
@@ -1231,7 +1549,6 @@ function filterCollection(col, el) {
 
 function onSearch() { render(); }
 
-// ── SORT ──
 function toggleSortMenu(e) {
   e.stopPropagation();
   document.getElementById('sortMenu').classList.toggle('open');
@@ -1251,18 +1568,21 @@ function openLink(id) {
   const b = bookmarks.find(x => x.id === id);
   if (!b) return;
   b.clicks++;
-  showToast('Ouverture · ' + b.domain);
+  window.open(b.url, '_blank', 'noopener');
   if (currentSort === 'usage') render();
+  scheduleSave();
 }
+
 function pinToggle(id) {
   const b = bookmarks.find(x => x.id === id);
-  if (b) {
-    b.pinned = !b.pinned;
-    showToast(b.pinned ? 'Épinglé' : 'Désépinglé');
-    renderPills();
-    render();
-  }
+  if (!b) return;
+  b.pinned = !b.pinned;
+  renderPills();
+  render();
+  scheduleSave();
+  showToast(b.pinned ? 'Épinglé' : 'Désépinglé');
 }
+
 function deleteBookmark(id) {
   const b = bookmarks.find(x => x.id === id);
   if (!b) return;
@@ -1270,6 +1590,7 @@ function deleteBookmark(id) {
   bookmarks = bookmarks.filter(x => x.id !== id);
   renderPills();
   render();
+  scheduleSave();
   showToast('Supprimé');
 }
 
@@ -1277,58 +1598,52 @@ function editBookmark(id) {
   const b = bookmarks.find(x => x.id === id);
   if (!b) return;
   editingBookmarkId = id;
-  pickedCol = b.collection || views[0].id;
-  document.getElementById('paletteUrl').value = b.url;
+  pickedCol = b.collection || views[0]?.id || '';
+  document.getElementById('paletteUrl').value   = b.url;
   document.getElementById('paletteTitle').value = b.title;
-  document.getElementById('paletteTags').value = '';
+  document.getElementById('paletteTags').value  = (b.tags || []).join(', ');
   document.getElementById('saveBtnLabel').textContent = 'Mettre à jour';
   document.getElementById('palettePreview').classList.add('show');
   document.getElementById('ppFavicon').innerHTML = faviconHTML(b.domain, b.emoji);
   document.getElementById('ppTitle').textContent = b.title;
-  document.getElementById('ppUrl').textContent = b.url;
+  document.getElementById('ppUrl').textContent   = b.url;
   renderModalColGrid();
   document.getElementById('paletteWrap').classList.add('open');
   setTimeout(() => document.getElementById('paletteTitle').focus(), 150);
 }
 
-// ── MODAL ──
+// ── ADD MODAL ──
 function openPalette() {
   editingBookmarkId = null;
-  pickedCol = views[0]?.id || 'work';
+  pickedCol = views[0]?.id || '';
   document.getElementById('saveBtnLabel').textContent = 'Enregistrer';
+  document.getElementById('paletteUrl').value   = '';
+  document.getElementById('paletteTitle').value = '';
+  document.getElementById('paletteTags').value  = '';
+  document.getElementById('palettePreview').classList.remove('show');
   renderModalColGrid();
   document.getElementById('paletteWrap').classList.add('open');
   setTimeout(() => document.getElementById('paletteUrl').focus(), 150);
 }
+
 function resetViewport() {
-  // Force iOS to reset zoom after dismissing a modal with inputs
   const meta = document.querySelector('meta[name="viewport"]');
   if (!meta) return;
-  const original = meta.content;
-  meta.content = original + ', maximum-scale=1';
-  requestAnimationFrame(() => { meta.content = original; });
+  const orig = meta.content;
+  meta.content = orig + ', maximum-scale=1';
+  requestAnimationFrame(() => { meta.content = orig; });
 }
 
 function closePalette() {
   document.getElementById('paletteWrap').classList.remove('open');
-  document.getElementById('paletteUrl').value = '';
-  document.getElementById('paletteTitle').value = '';
-  document.getElementById('paletteTags').value = '';
-  document.getElementById('palettePreview').classList.remove('show');
   editingBookmarkId = null;
   resetViewport();
 }
-
-function closeCreateView() {
-  document.getElementById('createViewWrap').classList.remove('open');
-  document.getElementById('newViewName').value = '';
-  pickedColor = '#c9ff5b';
-  document.querySelectorAll('.color-swatch').forEach((s, i) => s.classList.toggle('active', i === 0));
-  resetViewport();
+function handleModalClick(e, id) {
+  if (e.target.id === id) (id === 'paletteWrap' ? closePalette() : closeCreateView());
 }
 
-function handleModalClick(e, id) { if (e.target.id === id) (id === 'paletteWrap' ? closePalette() : closeCreateView()); }
-
+// ── URL META FETCH ──
 let fetchTimer;
 function onPaletteInput() {
   const raw = document.getElementById('paletteUrl').value.trim();
@@ -1337,46 +1652,31 @@ function onPaletteInput() {
     document.getElementById('palettePreview').classList.remove('show');
     return;
   }
-  // Add scheme if missing
   const url = raw.startsWith('http') ? raw : 'https://' + raw;
   document.getElementById('palettePreview').classList.add('show');
   document.getElementById('ppTitle').innerHTML = '<span class="pp-loading">Récupération…</span>';
-  document.getElementById('ppUrl').textContent = '';
+  document.getElementById('ppUrl').textContent  = '';
   document.getElementById('ppFavicon').innerHTML = '';
-
   fetchTimer = setTimeout(() => fetchMeta(url), 700);
 }
 
 async function fetchMeta(url) {
+  const domain = url.replace(/https?:\/\/(www\.)?/, '').split('/')[0];
+  document.getElementById('ppFavicon').innerHTML = faviconHTML(domain, domain[0]?.toUpperCase() || '?');
   try {
-    const domain = url.replace(/https?:\/\/(www\.)?/, '').split('/')[0];
-    // Show favicon immediately via Google
-    document.getElementById('ppFavicon').innerHTML = faviconHTML(domain, domain[0].toUpperCase());
-
-    // Fetch page HTML via allorigins CORS proxy to extract <title>
-    const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-    const res = await fetch(proxy, { signal: AbortSignal.timeout(6000) });
+    const res  = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+                             { signal: AbortSignal.timeout(6000) });
     const json = await res.json();
     const html = json.contents || '';
-
-    // Extract <title>
-    const titleMatch = html.match(/<title[^>]*>([^<]{1,200})<\/title>/i);
-    let title = titleMatch ? titleMatch[1].trim().replace(/&amp;/g,'&').replace(/&#039;/g,"'").replace(/&quot;/g,'"') : domain;
-
+    const m    = html.match(/<title[^>]*>([^<]{1,200})<\/title>/i);
+    let title  = m ? m[1].trim().replace(/&amp;/g,'&').replace(/&#039;/g,"'").replace(/&quot;/g,'"') : domain;
     document.getElementById('ppTitle').textContent = title;
-    document.getElementById('ppUrl').textContent = url;
-    if (!document.getElementById('paletteTitle').value) {
-      document.getElementById('paletteTitle').value = title;
-    }
+    document.getElementById('ppUrl').textContent   = url;
+    if (!document.getElementById('paletteTitle').value) document.getElementById('paletteTitle').value = title;
   } catch {
-    // Fallback: just use domain as title
-    const domain = url.replace(/https?:\/\/(www\.)?/, '').split('/')[0];
     document.getElementById('ppTitle').textContent = domain;
-    document.getElementById('ppUrl').textContent = url;
-    document.getElementById('ppFavicon').innerHTML = faviconHTML(domain, domain[0].toUpperCase());
-    if (!document.getElementById('paletteTitle').value) {
-      document.getElementById('paletteTitle').value = domain;
-    }
+    document.getElementById('ppUrl').textContent   = url;
+    if (!document.getElementById('paletteTitle').value) document.getElementById('paletteTitle').value = domain;
   }
 }
 
@@ -1387,55 +1687,99 @@ function pickCollection(el) {
 }
 
 function saveBookmark() {
-  const raw = document.getElementById('paletteUrl').value.trim();
-  if (!raw) { showToast('Aucune URL'); return; }
-  const url = raw.startsWith('http') ? raw : 'https://' + raw;
-  const title = document.getElementById('paletteTitle').value.trim() || document.getElementById('ppTitle').textContent;
-  const domain = url.replace(/https?:\/\/(www\.)?/,'').split('/')[0];
-  const faviconEl = document.getElementById('ppFavicon');
-  const emoji = domain[0]?.toUpperCase() || '○';
+  const raw   = document.getElementById('paletteUrl').value.trim();
+  if (!raw) { showToast('Aucune URL saisie'); return; }
+  const url    = raw.startsWith('http') ? raw : 'https://' + raw;
+  const title  = document.getElementById('paletteTitle').value.trim() || document.getElementById('ppTitle').textContent || url;
+  const domain = url.replace(/https?:\/\/(www\.)?/, '').split('/')[0];
+  const emoji  = domain[0]?.toUpperCase() || '?';
+  const tags   = document.getElementById('paletteTags').value.split(',').map(t => t.trim()).filter(Boolean);
 
   if (editingBookmarkId) {
     const b = bookmarks.find(x => x.id === editingBookmarkId);
-    if (b) {
-      b.url = url; b.title = title; b.domain = domain; b.emoji = emoji; b.collection = pickedCol;
-      showToast('Favori mis à jour');
-    }
+    if (b) Object.assign(b, { url, title, domain, emoji, collection: pickedCol, tags });
+    showToast('Favori mis à jour');
   } else {
-    bookmarks.unshift({
-      id: Date.now(), title, url, domain, emoji, collection: pickedCol, pinned: false, addedAt: now, clicks: 0
-    });
+    bookmarks.unshift({ id: Date.now(), url, title, domain, emoji, collection: pickedCol,
+                        tags, pinned: false, addedAt: Date.now(), clicks: 0 });
     showToast('Favori ajouté');
   }
   closePalette();
   renderPills();
   render();
+  scheduleSave();
 }
 
+// ── TOAST ──
 function showToast(msg) {
   const t = document.getElementById('toast');
   document.getElementById('toastMsg').textContent = msg;
   t.classList.add('show');
-  clearTimeout(window.tt);
-  window.tt = setTimeout(() => t.classList.remove('show'), 2000);
+  clearTimeout(window._tt);
+  window._tt = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
-// KEYBOARD SHORTCUTS
-document.addEventListener('keydown', (e) => {
+// ── KEYBOARD ──
+document.addEventListener('keydown', e => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openPalette(); }
-  else if (e.key === 'Escape') { closePalette(); closeCreateView(); }
-  else if (e.key === '/' && !document.activeElement.matches('input')) { e.preventDefault(); document.getElementById('searchInput').focus(); }
-  else if (e.key === 'n' && !document.activeElement.matches('input')) openPalette();
-  else if (e.key === 'Enter' && (document.activeElement.id === 'paletteUrl' || document.activeElement.id === 'paletteTitle')) saveBookmark();
+  else if (e.key === 'Escape')  { closePalette(); closeCreateView(); }
+  else if (e.key === '/' && !document.activeElement.matches('input,textarea')) {
+    e.preventDefault(); document.getElementById('searchInput').focus();
+  }
+  else if (e.key === 'n' && !document.activeElement.matches('input,textarea')) openPalette();
+  else if (e.key === 'Enter' && ['paletteUrl','paletteTitle'].includes(document.activeElement.id)) saveBookmark();
   else if (e.key === 'Enter' && document.activeElement.id === 'newViewName') createView();
 });
 
 document.getElementById('paletteUrl').addEventListener('paste', () => setTimeout(onPaletteInput, 50));
 document.getElementById('searchInput').addEventListener('blur', resetViewport);
 
-// INIT
-renderPills();
-render();
+// ── THEME TOGGLE ──
+const LS_THEME = 'mf_theme';
+const ICON_MOON = `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>`;
+const ICON_SUN  = `<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+
+function applyTheme(mode) {
+  const isLight = mode === 'light';
+  document.documentElement.classList.toggle('light', isLight);
+  document.getElementById('themeToggle').innerHTML = isLight ? ICON_MOON : ICON_SUN;
+  document.getElementById('themeToggle').title = isLight ? 'Passer en mode sombre' : 'Passer en mode clair';
+  localStorage.setItem(LS_THEME, mode);
+}
+
+function toggleTheme() {
+  const isLight = document.documentElement.classList.contains('light');
+  applyTheme(isLight ? 'dark' : 'light');
+}
+
+// Init theme from localStorage or system preference
+(function() {
+  const saved = localStorage.getItem(LS_THEME);
+  if (saved) {
+    applyTheme(saved);
+  } else if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+    applyTheme('light');
+  } else {
+    applyTheme('dark');
+  }
+})();
+
+document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+// ── SETTINGS: disconnect ──
+document.getElementById('settingsBtn').addEventListener('click', () => {
+  if (confirm('Déconnecter et effacer le token ?')) handleDisconnect();
+});
+
+// ═══════════════════════════════════════════════════
+// ── BOOT
+// ═══════════════════════════════════════════════════
+if (ghToken && gistId) {
+  hideAuthScreen();
+  initApp();
+} else {
+  showAuthScreen();
+}
 </script>
 </body>
 </html>
