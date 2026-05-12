@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Mes Calendriers v5.2.0</title>
+<title>Mes Calendriers v5.2.1</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
@@ -133,7 +133,7 @@
   .med-chip .chip-capsule .cc-r{flex:1;height:100%;filter:brightness(0.72);}
   .med-chip.active{border-width:2px;background:#f0f4ff;}
 
-  .note-textarea{flex:1 1 auto;min-height:70px;width:100%;border-radius:10px;border:1px solid var(--border);padding:10px;font-size:14px;resize:vertical;background:#fff;color:var(--text);overflow-y:auto;font-family:'DM Sans',Arial,sans-serif;}
+  .note-textarea{flex:1 1 auto;min-height:70px;width:100%;border-radius:10px;border:1px solid var(--border);padding:10px;font-size:16px;resize:vertical;background:#fff;color:var(--text);overflow-y:auto;font-family:'DM Sans',Arial,sans-serif;}
   .note-actions{display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;}
   .btn{padding:9px 13px;border-radius:10px;border:1px solid var(--border);cursor:pointer;background:#f6f7fb;font-size:13px;font-family:'DM Sans',Arial,sans-serif;}
   .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
@@ -295,7 +295,7 @@
   .medcolor-actions{display:flex;gap:8px;justify-content:flex-end;}
 
   /* ── v5.1 ── */
-  .edit-cal-btn{position:absolute;top:10px;right:42px;width:26px;height:26px;border-radius:50%;background:#f0f4ff;border:1px solid #c8d8f8;color:#1a6fc4;font-size:13px;cursor:pointer;display:grid;place-items:center;z-index:2;transition:background .15s;}
+  .edit-cal-btn{position:absolute;top:10px;right:42px;width:26px;height:26px;border-radius:50%;background:#f0f4ff;border:1px solid #c8d8f8;color:#1a6fc4;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;z-index:2;transition:background .15s;}
   .edit-cal-btn:hover{background:#d8e8ff;}
   .calendar-header{padding:12px 80px 12px 16px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;}
   .cal-title-inp{font-weight:700;font-size:18px;border:none;background:transparent;font-family:'DM Sans',Arial,sans-serif;color:var(--text);flex:1;min-width:40px;outline:none;padding:2px 4px;border-radius:6px;margin:0;}
@@ -348,7 +348,7 @@
   .ecal-state-color{width:28px;height:28px;border-radius:6px;border:1px solid #ddd;cursor:pointer;padding:1px;flex-shrink:0;}
   .ecal-state-lbl{flex:1;padding:6px 10px;border-radius:8px;border:1px solid var(--border);font-size:13px;background:#f6f7fb;}
 
-  /* v5.2.0 – icônes sport & consultations */
+  /* v5.2.1 – icônes sport & consultations */
   .sport-icon-picker{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0 2px;}
   .sport-icon-btn{width:32px;height:32px;border-radius:6px;border:1px solid var(--border);background:#f6f7fb;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
   .sport-icon-btn.sel{background:#00b8d4;border-color:#00b8d4;transform:scale(1.15);}
@@ -609,7 +609,7 @@
 <script>
 (() => {
   'use strict';
-  const APP_VERSION = 'v5.2.0';
+  const APP_VERSION = 'v5.2.1';
   const LOCK_BEFORE_ISO='2025-10-06';
   const DOUBLE_DELAY=280,TAP_MAX=350,MOVE_TOL=10;
   const CALS_META_KEY='suiviSante.calendars';
@@ -759,6 +759,18 @@
     /* GitHub Gist Cloud Sync */
     sec('☁️ Cloud Sync (GitHub Gist)');
     btn('⚙️ Configurer Gist / PAT','',()=>{closeDrawer();openJBSetupModal();});
+    {
+      const lastMod=localStorage.getItem('suiviSante.lastModified');
+      const lbl=document.createElement('div');
+      lbl.className='drawer-label';
+      if(lastMod){
+        const d=new Date(parseInt(lastMod));
+        lbl.textContent='Dernière sauvegarde : '+d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      } else {
+        lbl.textContent='Aucune sauvegarde locale enregistrée';
+      }
+      drawerBody.appendChild(lbl);
+    }
     divider();
 
     /* Export / Import */
@@ -974,7 +986,7 @@
     // v5.1 titre éditable inline
     document.getElementById('calTitle_'+def.id).addEventListener('input',function(){
       const v=this.value.trim();
-      if(v){localStorage.setItem('suiviSante.title.'+def.id,v);markModified();}
+      if(v){localStorage.setItem('suiviSante.title.'+def.id,v);def.title=v;saveCalDefs();}
     });
     // v5.1 bouton edit
     document.getElementById('editBtn_'+def.id).onclick=()=>openEcalModal(def.id);
@@ -1469,13 +1481,16 @@
   const syncIndicator=(() => {
     const el=document.createElement('div');
     el.id='syncIndicator';
-    el.style.cssText='font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0;transition:color 0.3s;';
-    document.querySelector('.topbar').appendChild(el);
+    el.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(30,30,46,0.92);color:#fff;font-size:13px;padding:8px 20px;border-radius:20px;z-index:9999;pointer-events:none;opacity:0;transition:opacity 0.3s;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.25);';
+    document.body.appendChild(el);
+    let _hideTimer=null;
+    function _showToast(msg){clearTimeout(_hideTimer);el.textContent=msg;el.style.opacity='1';}
+    function _hideToast(){el.style.opacity='0';}
     return {
-      idle:   ()=>{el.textContent='';},
-      saving: ()=>{el.style.color='var(--accent)';el.textContent='☁️ Sauvegarde…';},
-      ok:     ()=>{el.style.color='var(--green)';el.textContent='✅ Sauvegardé';setTimeout(()=>el.textContent='',3000);},
-      err:    ()=>{el.style.color='var(--red)';el.textContent='⚠️ Erreur sync';}
+      idle:   ()=>{_hideToast();},
+      saving: ()=>{_showToast('☁️ Sauvegarde…');},
+      ok:     ()=>{_showToast('✅ Sauvegardé');_hideTimer=setTimeout(_hideToast,2500);},
+      err:    ()=>{_showToast('⚠️ Erreur sync');}
     };
   })();
 
