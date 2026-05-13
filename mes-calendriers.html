@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Mes Calendriers v5.2.1</title>
+<title>Mes Calendriers v5.3.0</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
@@ -172,8 +172,8 @@
   .report-day.rstate-2{background:var(--s2c,#ffcccc);}
   .report-day.rtoday{border:2px solid var(--accent);}
   .report-day.rnote::after{content:'✎';position:absolute;top:0;right:1px;font-size:7px;line-height:1;}
-  .report-day-meds{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;position:absolute;bottom:1px;}
-  .report-med-capsule{width:7px;height:4px;border-radius:2px;overflow:hidden;display:flex;border:1px solid rgba(0,0,0,0.15);transform:rotate(-25deg);}
+  .report-day-meds{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;position:absolute;bottom:1px;align-items:center;}
+  .report-med-capsule{width:9px;height:6px;border-radius:3px;overflow:hidden;display:flex;border:1px solid rgba(0,0,0,0.15);transform:rotate(-25deg);}
   .report-med-capsule .rmc-l{flex:1;height:100%;}
   .report-med-capsule .rmc-r{flex:1;height:100%;filter:brightness(0.7);}
   .report-notes-section{border-top:1px solid var(--border);padding-top:12px;}
@@ -221,23 +221,16 @@
     .report-month-block{max-width:100%!important;width:100%!important;}
   }
 
-  /* CLOUD SYNC MODALS */
-  .jb-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:90;display:none;}
-  .jb-backdrop.open{display:block;}
-  .jb-modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:95;padding:16px;}
-  .jb-modal.open{display:flex;}
-  .jb-card{width:min(94vw,400px);background:#fff;border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,0.22);padding:22px;display:flex;flex-direction:column;gap:14px;max-height:90vh;}
-  .jb-title{font-weight:700;font-size:16px;}
-  .jb-desc{font-size:13px;color:var(--muted);line-height:1.4;}
-  .jb-label{font-size:12px;font-weight:bold;color:var(--muted);margin-bottom:4px;}
-  .jb-input{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);font-size:14px;font-family:'DM Sans',Arial,sans-serif;}
-  .jb-list{display:flex;flex-direction:column;gap:8px;overflow-y:auto;flex:1;}
-  .jb-item{padding:12px;border:1px solid var(--border);border-radius:8px;background:#f9fafb;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;}
-  .jb-item:hover{background:#f0f4ff;border-color:var(--accent);}
-  .jb-item-date{font-weight:bold;font-size:14px;color:var(--text);}
-  .jb-item-devices{font-size:12px;color:var(--muted);margin-top:4px;}
-  .jb-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px;}
-  .loader{display:none;font-size:14px;color:var(--accent);text-align:center;font-weight:bold;padding:10px 0;}
+  /* GOOGLE DRIVE SYNC */
+  .drive-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:8px 20px;border-radius:20px;font-size:13px;font-weight:500;z-index:9999;pointer-events:none;opacity:0;transition:opacity 0.3s;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.25);color:#fff;}
+  .drive-update-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;display:none;align-items:center;justify-content:center;}
+  .drive-update-overlay.open{display:flex;}
+  .drive-update-card{width:min(94vw,420px);background:#fff;border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,0.22);padding:22px;display:flex;flex-direction:column;gap:14px;}
+  .drive-login-overlay{position:fixed;inset:0;background:rgba(244,246,250,0.97);z-index:300;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px;}
+  .drive-login-overlay.open{display:flex;}
+  .drive-loading-overlay{position:fixed;inset:0;background:rgba(244,246,250,0.97);z-index:300;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+  .drive-loading-overlay.open{display:flex;}
+  @keyframes spin{to{transform:rotate(360deg)}}
 
   /* MODAL IMPORT VERSION */
   .import-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;display:none;}
@@ -348,7 +341,7 @@
   .ecal-state-color{width:28px;height:28px;border-radius:6px;border:1px solid #ddd;cursor:pointer;padding:1px;flex-shrink:0;}
   .ecal-state-lbl{flex:1;padding:6px 10px;border-radius:8px;border:1px solid var(--border);font-size:13px;background:#f6f7fb;}
 
-  /* v5.2.1 – icônes sport & consultations */
+  /* v5.2.3 – icônes sport & consultations */
   .sport-icon-picker{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0 2px;}
   .sport-icon-btn{width:32px;height:32px;border-radius:6px;border:1px solid var(--border);background:#f6f7fb;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
   .sport-icon-btn.sel{background:#00b8d4;border-color:#00b8d4;transform:scale(1.15);}
@@ -457,38 +450,32 @@
   </div>
 </div>
 
-<!-- GIST SETUP -->
-<div class="jb-backdrop" id="jbSetupBackdrop"></div>
-<div class="jb-modal" id="jbSetupModal">
-  <div class="jb-card">
-    <div class="jb-title">⚙️ Configuration Cloud (GitHub Gist)</div>
-    <div class="jb-desc">Créez un <strong>Gist secret</strong> sur <a href="https://gist.github.com" target="_blank" style="color:var(--accent)">gist.github.com</a> avec un fichier nommé <code>suivi_sante.json</code>, puis générez un <strong>Personal Access Token</strong> (scope : <code>gist</code>) sur GitHub → Settings → Developer settings.</div>
-    <div>
-      <div class="jb-label">Personal Access Token (ghp_...)</div>
-      <input type="password" id="jbApiKeyInp" class="jb-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
-    </div>
-    <div>
-      <div class="jb-label">Gist ID (32 caractères hex dans l'URL du Gist)</div>
-      <input type="text" id="jbBinIdInp" class="jb-input" placeholder="ex: a1b2c3d4e5f6...">
-    </div>
-    <div id="jbSetupStatus" style="font-size:12px;color:var(--muted);min-height:16px;"></div>
-    <div class="jb-actions">
-      <button class="btn" id="jbSetupCancel">Annuler</button>
-      <button class="btn btn-primary" id="jbSetupSave">Enregistrer</button>
-    </div>
+<!-- GOOGLE DRIVE: Login overlay -->
+<div class="drive-login-overlay" id="driveLoginOverlay">
+  <div style="text-align:center;max-width:360px;padding:0 24px;">
+    <div style="font-size:2rem;margin-bottom:8px;">📅</div>
+    <div style="font-weight:700;font-size:1.4rem;margin-bottom:8px;color:#222;">Mes Calendriers</div>
+    <div style="font-size:0.9rem;color:#666;margin-bottom:28px;line-height:1.6;">Vos données sont stockées exclusivement sur Google Drive.<br>Connectez-vous pour y accéder.</div>
+    <button onclick="driveSignIn()" style="padding:12px 28px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:1rem;cursor:pointer;font-family:'DM Sans',Arial,sans-serif;">🔑 Se connecter avec Google</button>
+    <div id="driveLoginStatus" style="margin-top:16px;font-size:0.82rem;color:#666;"></div>
   </div>
 </div>
 
-<!-- MODAL IMPORT VERSION PLUS RECENTE -->
-<div class="import-backdrop" id="importBackdrop"></div>
-<div class="import-modal" id="importModal">
-  <div class="import-card">
-    <div class="import-icon">☁️</div>
-    <div class="import-title">Version plus récente disponible</div>
-    <div class="import-msg" id="importMsg">Une sauvegarde plus récente a été trouvée dans le cloud. Voulez-vous importer ces données ?</div>
-    <div class="import-actions">
-      <button class="btn" id="importSkipBtn">Ignorer</button>
-      <button class="btn btn-primary" id="importDoBtn">Importer la dernière version</button>
+<!-- GOOGLE DRIVE: Loading overlay -->
+<div class="drive-loading-overlay" id="driveLoadingOverlay">
+  <div style="font-size:1.4rem;font-weight:700;color:#222;">Mes Calendriers</div>
+  <div style="font-size:0.9rem;color:#666;">Connexion à Google Drive…</div>
+  <div style="width:36px;height:36px;border:3px solid #ddd;border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+</div>
+
+<!-- GOOGLE DRIVE: Update prompt -->
+<div class="drive-update-overlay" id="driveUpdateOverlay">
+  <div class="drive-update-card">
+    <div style="font-weight:700;font-size:16px;">☁️ Mise à jour disponible</div>
+    <div style="font-size:13px;color:#666;line-height:1.6;" id="driveUpdateMsg"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn" onclick="driveKeepLocal()">Garder local</button>
+      <button class="btn btn-primary" onclick="driveApplyRemote()">Mettre à jour</button>
     </div>
   </div>
 </div>
@@ -609,7 +596,7 @@
 <script>
 (() => {
   'use strict';
-  const APP_VERSION = 'v5.2.1';
+  const APP_VERSION = 'v5.3.0';
   const LOCK_BEFORE_ISO='2025-10-06';
   const DOUBLE_DELAY=280,TAP_MAX=350,MOVE_TOL=10;
   const CALS_META_KEY='suiviSante.calendars';
@@ -661,7 +648,7 @@
   const toISO=d=>d.toISOString().slice(0,10);
   const nextState=s=>(s+1)%3;
   const applyState=(el,s)=>{el.classList.remove('state-0','state-1','state-2');el.classList.add('state-'+s);};
-  const markModified=()=>{localStorage.setItem('suiviSante.lastModified',Date.now());scheduleAutoSave();};
+  const markModified=()=>{localStorage.setItem('suiviSante.lastModified',Date.now());driveSave();};
   const persist=(key,obj)=>{localStorage.setItem(key,JSON.stringify(obj));markModified();};
   const loadLS=key=>{try{return JSON.parse(localStorage.getItem(key));}catch{return null;}};
 
@@ -756,20 +743,18 @@
     const inp=(placeholder,val='')=>{const i=document.createElement('input');i.type='text';i.className='drawer-input';i.placeholder=placeholder;i.value=val;drawerBody.appendChild(i);return i;};
     const lbl=txt=>{const l=document.createElement('div');l.className='drawer-label';l.textContent=txt;drawerBody.appendChild(l);};
 
-    /* GitHub Gist Cloud Sync */
-    sec('☁️ Cloud Sync (GitHub Gist)');
-    btn('⚙️ Configurer Gist / PAT','',()=>{closeDrawer();openJBSetupModal();});
+    /* Google Drive Cloud Sync */
+    sec('☁️ Google Drive');
     {
-      const lastMod=localStorage.getItem('suiviSante.lastModified');
-      const lbl=document.createElement('div');
-      lbl.className='drawer-label';
-      if(lastMod){
-        const d=new Date(parseInt(lastMod));
-        lbl.textContent='Dernière sauvegarde : '+d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-      } else {
-        lbl.textContent='Aucune sauvegarde locale enregistrée';
-      }
-      drawerBody.appendChild(lbl);
+      const statusDiv=document.createElement('div');
+      statusDiv.className='drawer-label';
+      statusDiv.id='drawerDriveStatus';
+      statusDiv.textContent=driveAccessToken?'✅ Connecté — sync automatique':'Non connecté';
+      drawerBody.appendChild(statusDiv);
+      const lastSync=localStorage.getItem('drive_last_sync');
+      if(lastSync){const l=document.createElement('div');l.className='drawer-label';l.textContent='Dernière sync : '+lastSync;drawerBody.appendChild(l);}
+      if(driveAccessToken){btn('🔓 Déconnecter Google','',()=>{closeDrawer();driveSignOut();});}
+      else{btn('🔑 Se connecter avec Google','',()=>{closeDrawer();driveSignIn();});}
     }
     divider();
 
@@ -1343,17 +1328,22 @@
         const noteData=cal.notes[iso];
         if(noteData&&noteData.text)cell.classList.add('rnote');
         const takenMeds=noteData&&noteData.meds?noteData.meds.map(id=>medMap[id]).filter(Boolean):[];
+        const takenConsults=(!isSport&&noteData&&noteData.consults)?noteData.consults:[];
         const numSpan=document.createElement('span');numSpan.textContent=d;cell.appendChild(numSpan);
-        if(takenMeds.length>0){
+        if(takenMeds.length>0||takenConsults.length>0){
           const medsDiv=document.createElement('div');medsDiv.className='report-day-meds';
           takenMeds.forEach(med=>{
             if(isSport){
-              const sp=document.createElement('span');sp.style.cssText='font-size:6px;';sp.textContent='🏃';medsDiv.appendChild(sp);
+              const sp=document.createElement('span');sp.style.cssText='font-size:10px;line-height:1;';sp.textContent=med.icon||'🏃';medsDiv.appendChild(sp);
             } else {
               const cap=document.createElement('div');cap.className='report-med-capsule';
               cap.innerHTML=`<div class="rmc-l" style="background:${med.color}"></div><div class="rmc-r" style="background:${med.color}"></div>`;
               medsDiv.appendChild(cap);
             }
+          });
+          takenConsults.forEach(cid=>{
+            const ct=CONSULT_TYPES.find(x=>x.id===cid);
+            if(ct){const sp=document.createElement('span');sp.style.cssText='font-size:10px;line-height:1;';sp.textContent=ct.icon;medsDiv.appendChild(sp);}
           });
           cell.appendChild(medsDiv);
         }
@@ -1385,6 +1375,23 @@
       });
       legendDiv.appendChild(itemsDiv);
     }
+    // Professionnels de santé consultés (santé seulement)
+    if(!isSport){
+      const usedConsultIds=new Set();
+      Object.values(cal.notes||{}).forEach(n=>{(n.consults||[]).forEach(id=>usedConsultIds.add(id));});
+      const usedConsults=CONSULT_TYPES.filter(ct=>usedConsultIds.has(ct.id));
+      if(usedConsults.length>0){
+        const ctTitle=document.createElement('div');ctTitle.className='report-meds-legend-title';ctTitle.style.marginTop='10px';ctTitle.textContent='Professionnels de santé :';
+        legendDiv.appendChild(ctTitle);
+        const ctItems=document.createElement('div');ctItems.className='report-meds-legend-items';
+        usedConsults.forEach(ct=>{
+          const item=document.createElement('div');item.className='report-med-legend-item';
+          item.innerHTML=`<span style="font-size:18px;">${ct.icon}</span><span>${ct.label}</span>`;
+          ctItems.appendChild(item);
+        });
+        legendDiv.appendChild(ctItems);
+      }
+    }
     reportGridContainer.insertBefore(legendDiv, reportGridContainer.querySelector('.report-notes-section'));
 
     const notesList=document.getElementById('reportNotesList');
@@ -1399,7 +1406,8 @@
       else{
         notesList.innerHTML='<ul>'+entries.map(([d,n])=>{
           const medsStr=n.meds&&n.meds.length?n.meds.map(id=>{const m=medMap[id];return m?`<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${m.color};border:1px solid #000;margin-right:3px;vertical-align:middle;"></span>${m.name}`:''}).filter(Boolean).join(', '):'';
-          return`<li><strong>${d}</strong>${medsStr?' — '+medsStr:''}${n.text?' : '+n.text:''}</li>`;
+          const consultsStr=(!isSport&&n.consults&&n.consults.length)?n.consults.map(cid=>{const ct=CONSULT_TYPES.find(x=>x.id===cid);return ct?`${ct.icon} ${ct.label}`:''}).filter(Boolean).join(', '):'';
+          return`<li><strong>${d}</strong>${medsStr?' — '+medsStr:''}${consultsStr?' · '+consultsStr:''}${n.text?' : '+n.text:''}</li>`;
         }).join('')+'</ul>';
       }
     }
@@ -1474,184 +1482,225 @@
   globalState.calDefs=savedDefs;
   savedDefs.forEach(def=>{createCalendarDOM(def);const cal=initCalendar(def);globalState.calendars.push(cal);});
 
-  /* ── CLOUD SYNC (GITHUB GIST) ── */
-  const GIST_API='https://api.github.com/gists/';
-  const GIST_FILENAME='suivi_sante.json';
+  // Start Google Drive (shows login overlay or silently reconnects)
+  driveInit();
 
-  const syncIndicator=(() => {
-    const el=document.createElement('div');
-    el.id='syncIndicator';
-    el.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(30,30,46,0.92);color:#fff;font-size:13px;padding:8px 20px;border-radius:20px;z-index:9999;pointer-events:none;opacity:0;transition:opacity 0.3s;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.25);';
-    document.body.appendChild(el);
-    let _hideTimer=null;
-    function _showToast(msg){clearTimeout(_hideTimer);el.textContent=msg;el.style.opacity='1';}
-    function _hideToast(){el.style.opacity='0';}
-    return {
-      idle:   ()=>{_hideToast();},
-      saving: ()=>{_showToast('☁️ Sauvegarde…');},
-      ok:     ()=>{_showToast('✅ Sauvegardé');_hideTimer=setTimeout(_hideToast,2500);},
-      err:    ()=>{_showToast('⚠️ Erreur sync');}
-    };
-  })();
+  /* ── GOOGLE DRIVE SYNC ── */
+  const DRIVE_FILE_NAME='mes_calendriers.json';
+  const DRIVE_CLIENT_ID='68487410553-mp697niljk1ov3sn2ucjfe8ckkqds48p.apps.googleusercontent.com';
+  const DRIVE_SCOPE='https://www.googleapis.com/auth/drive.appdata';
 
-  function getJBCreds(){return{key:localStorage.getItem('suiviSante.jbKey'),bin:localStorage.getItem('suiviSante.jbBin')};}
+  let driveTokenClient=null;
+  let driveAccessToken=null;
+  let driveFileId=null;
+  let _drivePendingRemote=null;
+  let drivePollInterval=null;
+  let driveAutoSaveTimer=null;
 
-  function openJBSetupModal(){
-    const creds=getJBCreds();
-    document.getElementById('jbApiKeyInp').value=creds.key||'';
-    document.getElementById('jbBinIdInp').value=creds.bin||'';
-    document.getElementById('jbSetupStatus').textContent='';
-    document.getElementById('jbSetupBackdrop').classList.add('open');
-    document.getElementById('jbSetupModal').classList.add('open');
-  }
-  function closeJBSetupModal(){
-    document.getElementById('jbSetupBackdrop').classList.remove('open');
-    document.getElementById('jbSetupModal').classList.remove('open');
-  }
-  document.getElementById('jbSetupCancel').onclick=closeJBSetupModal;
-  document.getElementById('jbSetupBackdrop').onclick=closeJBSetupModal;
-  document.getElementById('jbSetupSave').onclick=async()=>{
-    const k=document.getElementById('jbApiKeyInp').value.trim();
-    const b=document.getElementById('jbBinIdInp').value.trim();
-    const status=document.getElementById('jbSetupStatus');
-    if(!k||!b){status.style.color='var(--red)';status.textContent='Veuillez remplir les deux champs.';return;}
-    status.style.color='var(--accent)';status.textContent='Vérification…';
-    try{
-      const res=await fetch(GIST_API+b,{headers:{Authorization:'token '+k,Accept:'application/vnd.github+json'}});
-      if(!res.ok)throw new Error('HTTP '+res.status);
-      const gist=await res.json();
-      if(!gist.files||!gist.files[GIST_FILENAME]){status.textContent='Initialisation du Gist…';await writeGist(k,b,{backups:[]});}
-      localStorage.setItem('suiviSante.jbKey',k);
-      localStorage.setItem('suiviSante.jbBin',b);
-      status.style.color='var(--green)';status.textContent='✅ Connexion réussie !';
-      setTimeout(closeJBSetupModal,1200);
-    }catch(e){status.style.color='var(--red)';status.textContent='❌ Erreur : '+e.message;}
-  };
-
-  async function fetchGist(creds){
-    const res=await fetch(GIST_API+creds.bin,{headers:{Authorization:'token '+creds.key,Accept:'application/vnd.github+json'}});
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    const gist=await res.json();
-    const file=gist.files[GIST_FILENAME];
-    if(!file)return{backups:[]};
-    const content=file.truncated?await(await fetch(file.raw_url)).text():file.content;
-    return JSON.parse(content);
+  // Toast
+  const driveToastEl=(()=>{const el=document.createElement('div');el.className='drive-toast';document.body.appendChild(el);return el;})();
+  let _driveToastTimer=null;
+  function driveToast(msg,isErr=false,duration=2800){
+    clearTimeout(_driveToastTimer);
+    driveToastEl.textContent=msg;driveToastEl.style.background=isErr?'#d60000':'rgba(30,30,46,0.92)';
+    driveToastEl.style.opacity='1';
+    _driveToastTimer=setTimeout(()=>{driveToastEl.style.opacity='0';},duration);
   }
 
-  async function writeGist(key,bin,payload){
-    const res=await fetch(GIST_API+bin,{
-      method:'PATCH',
-      headers:{Authorization:'token '+key,Accept:'application/vnd.github+json','Content-Type':'application/json'},
-      body:JSON.stringify({files:{[GIST_FILENAME]:{content:JSON.stringify(payload)}}})
+  function driveLoadLibs(){
+    return new Promise(resolve=>{
+      let gapiReady=false,gisReady=false;
+      const check=()=>{if(gapiReady&&gisReady)resolve();};
+      const s1=document.createElement('script');s1.src='https://apis.google.com/js/api.js';
+      s1.onload=()=>{gapi.load('client',async()=>{await gapi.client.init({});gapiReady=true;check();});};
+      document.head.appendChild(s1);
+      const s2=document.createElement('script');s2.src='https://accounts.google.com/gsi/client';
+      s2.onload=()=>{gisReady=true;check();};document.head.appendChild(s2);
     });
-    if(!res.ok)throw new Error('HTTP '+res.status);
   }
 
-  function buildLocalPayload(){
-    const localData={calendars:globalState.calDefs,data:{},lastModified:localStorage.getItem('suiviSante.lastModified')||Date.now()};
-    globalState.calDefs.forEach(d=>{
-      localData.data[d.id]={days:loadLS('suiviSante.days.'+d.id)||{},notes:loadLS('suiviSante.notes.'+d.id)||{},meds:loadLS('suiviSante.meds.'+d.id)||[]};
-    });
-    return localData;
-  }
-
-  /* ── Sauvegarde automatique (debounce 5 s) ── */
-  let autoSaveTimer=null;
-  function scheduleAutoSave(){
-    if(!getJBCreds().key)return;
-    clearTimeout(autoSaveTimer);
-    autoSaveTimer=setTimeout(silentUpload,5000);
-  }
-
-  async function silentUpload(){
-    const creds=getJBCreds();
-    if(!creds.key||!creds.bin)return;
-    syncIndicator.saving();
-    try{
-      let cloudData={backups:[]};
-      try{cloudData=await fetchGist(creds);}catch{}
-      if(!Array.isArray(cloudData.backups))cloudData={backups:[]};
-      const newBackup={timestamp:Date.now(),dateStr:new Date().toLocaleString('fr-FR'),data:buildLocalPayload()};
-      cloudData.backups.unshift(newBackup);
-      if(cloudData.backups.length>5)cloudData.backups=cloudData.backups.slice(0,5);
-      await writeGist(creds.key,creds.bin,cloudData);
-      syncIndicator.ok();
-    }catch(e){console.warn('Auto-save échoué :',e);syncIndicator.err();}
-  }
-
-  /* ── Vérification version au démarrage + polling 15s si onglet visible ── */
-  let _importPendingBackup=null;
-  let _versionCheckTimer=null;
-
-  async function checkCloudVersion(){
-    // Ne vérifier que si l'onglet est visible
-    if(document.hidden)return;
-    const creds=getJBCreds();
-    if(!creds.key||!creds.bin)return;
-    try{
-      const cloudData=await fetchGist(creds);
-      if(!cloudData||!Array.isArray(cloudData.backups)||cloudData.backups.length===0)return;
-      const latest=cloudData.backups[0];
-      const cloudMod=parseInt(latest.data.lastModified||'0',10);
-      const localMod=parseInt(localStorage.getItem('suiviSante.lastModified')||'0',10);
-      if(cloudMod>localMod){
-        // Propose l'import si modal pas déjà affiché
-        if(document.getElementById('importBackdrop').classList.contains('open'))return;
-        _importPendingBackup=latest;
-        const d=new Date(cloudMod).toLocaleString('fr-FR');
-        document.getElementById('importMsg').textContent=`Une version plus récente a été sauvegardée dans le cloud (${d}). Voulez-vous importer ces données ?`;
-        document.getElementById('importBackdrop').classList.add('open');
-        document.getElementById('importModal').classList.add('open');
+  async function driveInit(){
+    await driveLoadLibs();
+    const hint=sessionStorage.getItem('drive_hint')||localStorage.getItem('drive_hint')||'';
+    const wasConnected=localStorage.getItem('drive_connected')==='1';
+    driveTokenClient=google.accounts.oauth2.initTokenClient({
+      client_id:DRIVE_CLIENT_ID,scope:DRIVE_SCOPE,login_hint:hint,
+      callback:async(resp)=>{
+        if(resp.error){
+          driveHideLoading();
+          if(wasConnected)driveShowLogin(true);
+          return;
+        }
+        driveAccessToken=resp.access_token;
+        gapi.client.setToken({access_token:driveAccessToken});
+        try{
+          const ui=await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+driveAccessToken}});
+          const ud=await ui.json();
+          if(ud.email){localStorage.setItem('drive_hint',ud.email);sessionStorage.setItem('drive_hint',ud.email);}
+        }catch(e){}
+        localStorage.setItem('drive_connected','1');sessionStorage.setItem('drive_connected','1');
+        await driveCheckOnConnect();
       }
-    }catch(e){console.warn('Version check échoué :',e);}
-  }
-
-  function performImportFromCloud(bkp){
-    const creds=getJBCreds();
-    localStorage.clear();
-    const dta=bkp.data;
-    if(creds.key)localStorage.setItem('suiviSante.jbKey',creds.key);
-    if(creds.bin)localStorage.setItem('suiviSante.jbBin',creds.bin);
-    persist(CALS_META_KEY,dta.calendars);
-    dta.calendars.forEach(def=>{
-      const calData=dta.data&&dta.data[def.id];
-      if(calData){
-        localStorage.setItem('suiviSante.days.'+def.id,JSON.stringify(calData.days||{}));
-        localStorage.setItem('suiviSante.notes.'+def.id,JSON.stringify(calData.notes||{}));
-        localStorage.setItem('suiviSante.meds.'+def.id,JSON.stringify(calData.meds||[]));
-      }
-      if(def.title)localStorage.setItem('suiviSante.title.'+def.id,def.title);
     });
-    localStorage.setItem('suiviSante.lastModified',dta.lastModified||Date.now());
-    window.location.href=window.location.pathname+'?t='+Date.now();
+    if(wasConnected&&hint){driveShowLoading();driveTokenClient.requestAccessToken({prompt:'none'});}
+    else if(wasConnected&&!hint){driveShowLogin(true);}
+    else{driveShowLogin(true);}
   }
 
-  document.getElementById('importDoBtn').onclick=()=>{
-    document.getElementById('importBackdrop').classList.remove('open');
-    document.getElementById('importModal').classList.remove('open');
-    if(_importPendingBackup)performImportFromCloud(_importPendingBackup);
-    _importPendingBackup=null;
+  function driveSignIn(){if(!driveTokenClient)return;driveTokenClient.requestAccessToken({prompt:'select_account'});}
+
+  function driveSignOut(){
+    if(driveAccessToken)google.accounts.oauth2.revoke(driveAccessToken);
+    driveAccessToken=null;driveFileId=null;
+    localStorage.removeItem('drive_connected');localStorage.removeItem('drive_hint');
+    sessionStorage.removeItem('drive_hint');sessionStorage.removeItem('drive_connected');
+    localStorage.removeItem('drive_file_id');localStorage.removeItem('drive_last_sync');localStorage.removeItem('drive_last_sync_iso');
+    driveStopPolling();driveShowLogin(true);
+    // Clear all in-memory data
+    globalState.calDefs=[];globalState.calendars=[];
+    document.getElementById('mainContainer').innerHTML='';
+  }
+
+  function driveShowLogin(show){
+    driveHideLoading();
+    document.getElementById('driveLoginOverlay').className='drive-login-overlay'+(show?' open':'');
+  }
+  function driveShowLoading(){document.getElementById('driveLoadingOverlay').className='drive-loading-overlay open';}
+  function driveHideLoading(){document.getElementById('driveLoadingOverlay').className='drive-loading-overlay';}
+
+  async function driveGetFileId(){
+    if(driveFileId)return driveFileId;
+    const cached=localStorage.getItem('drive_file_id');if(cached){driveFileId=cached;return driveFileId;}
+    const resp=await fetch(`https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='${DRIVE_FILE_NAME}'&fields=files(id)`,{headers:{Authorization:'Bearer '+driveAccessToken}});
+    const data=await resp.json();
+    if(data.files&&data.files.length>0){driveFileId=data.files[0].id;localStorage.setItem('drive_file_id',driveFileId);return driveFileId;}
+    return null;
+  }
+
+  function buildDrivePayload(){
+    const payload={calendars:globalState.calDefs,data:{}};
+    globalState.calDefs.forEach(d=>{payload.data[d.id]={days:loadLS('suiviSante.days.'+d.id)||{},notes:loadLS('suiviSante.notes.'+d.id)||{},meds:loadLS('suiviSante.meds.'+d.id)||[]};});
+    return payload;
+  }
+
+  async function driveSave(){
+    if(!driveAccessToken)return;
+    clearTimeout(driveAutoSaveTimer);
+    driveAutoSaveTimer=setTimeout(async()=>{
+      driveToast('☁️ Sauvegarde…');
+      try{
+        const payload=JSON.stringify(buildDrivePayload(),null,2);
+        const fileId=await driveGetFileId();
+        let url,method;
+        if(fileId){url='https://www.googleapis.com/upload/drive/v3/files/'+fileId+'?uploadType=media&fields=id,modifiedTime';method='PATCH';}
+        else{
+          const meta={name:DRIVE_FILE_NAME,parents:['appDataFolder']};
+          const form=new FormData();
+          form.append('metadata',new Blob([JSON.stringify(meta)],{type:'application/json'}));
+          form.append('file',new Blob([payload],{type:'application/json'}));
+          const cr=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,modifiedTime',{method:'POST',headers:{Authorization:'Bearer '+driveAccessToken},body:form});
+          const cd=await cr.json();
+          driveFileId=cd.id;localStorage.setItem('drive_file_id',driveFileId);
+          const iso=cd.modifiedTime||new Date().toISOString();
+          localStorage.setItem('drive_last_sync_iso',iso);localStorage.setItem('drive_last_sync',new Date(iso).toLocaleString('fr-FR'));
+          driveToast('✅ Sauvegardé');return;
+        }
+        const resp=await fetch(url,{method,headers:{Authorization:'Bearer '+driveAccessToken,'Content-Type':'application/json'},body:payload});
+        const data=await resp.json();
+        const iso=data.modifiedTime||new Date().toISOString();
+        localStorage.setItem('drive_last_sync_iso',iso);localStorage.setItem('drive_last_sync',new Date(iso).toLocaleString('fr-FR'));
+        driveToast('✅ Sauvegardé');
+      }catch(e){driveToast('⚠️ Erreur sync',true);}
+    },3000); // 3s debounce like original
+  }
+
+  async function driveFetchAndCompare(){
+    if(!driveAccessToken)return;
+    try{
+      const fileId=await driveGetFileId();if(!fileId)return;
+      const metaResp=await fetch('https://www.googleapis.com/drive/v3/files/'+fileId+'?fields=modifiedTime',{headers:{Authorization:'Bearer '+driveAccessToken}});
+      const meta=await metaResp.json();
+      const remoteIso=meta.modifiedTime;
+      const remoteSyncedAt=remoteIso?new Date(remoteIso):null;
+      const localIso=localStorage.getItem('drive_last_sync_iso');
+      const localSyncedAt=localIso?new Date(localIso):null;
+      const stateEmpty=globalState.calDefs.length===0;
+      if(!stateEmpty&&remoteSyncedAt&&localSyncedAt&&remoteSyncedAt<=localSyncedAt)return;
+      const contentResp=await fetch('https://www.googleapis.com/drive/v3/files/'+fileId+'?alt=media',{headers:{Authorization:'Bearer '+driveAccessToken}});
+      const remote=await contentResp.json();
+      if(!remote.calendars)return;
+      if(stateEmpty){
+        // Silent load on first connect
+        applyRemoteData(remote,remoteIso);
+        return;
+      }
+      // Prompt user
+      if(document.getElementById('driveUpdateOverlay').classList.contains('open'))return;
+      _drivePendingRemote={...remote,_canonicalIso:remoteIso};
+      const dateStr=remoteSyncedAt?remoteSyncedAt.toLocaleString('fr-FR'):'';
+      document.getElementById('driveUpdateMsg').innerHTML=
+        'Une version plus récente est disponible sur Google Drive.<br><b>Drive :</b> '+remote.calendars.length+' calendrier(s) — <i>'+dateStr+'</i><br><b>Local :</b> '+globalState.calDefs.length+' calendrier(s)';
+      document.getElementById('driveUpdateOverlay').classList.add('open');
+    }catch(e){/*silent*/}
+  }
+
+  function applyRemoteData(remote,remoteIso){
+    // Write to localStorage then reload to re-init cleanly
+    if(remote.calendars){
+      globalState.calDefs.forEach(d=>{localStorage.removeItem('suiviSante.days.'+d.id);localStorage.removeItem('suiviSante.notes.'+d.id);localStorage.removeItem('suiviSante.meds.'+d.id);localStorage.removeItem('suiviSante.title.'+d.id);});
+      localStorage.removeItem(CALS_META_KEY);
+      localStorage.setItem(CALS_META_KEY,JSON.stringify(remote.calendars));
+      remote.calendars.forEach(def=>{const d=remote.data&&remote.data[def.id];if(d){localStorage.setItem('suiviSante.days.'+def.id,JSON.stringify(d.days||{}));localStorage.setItem('suiviSante.notes.'+def.id,JSON.stringify(d.notes||{}));localStorage.setItem('suiviSante.meds.'+def.id,JSON.stringify(d.meds||[]));}if(def.title)localStorage.setItem('suiviSante.title.'+def.id,def.title);});
+    }
+    const iso=remoteIso||new Date().toISOString();
+    localStorage.setItem('drive_last_sync_iso',iso);localStorage.setItem('drive_last_sync',new Date(iso).toLocaleString('fr-FR'));
+    // Re-init calendars without page reload
+    document.getElementById('mainContainer').innerHTML='';
+    globalState.calDefs=[];globalState.calendars=[];
+    migrateOldData();
+    let defs=loadLS(CALS_META_KEY);
+    if(!defs||!Array.isArray(defs)||defs.length===0){defs=DEFAULT_DEFS;persist(CALS_META_KEY,defs);}
+    globalState.calDefs=defs;
+    defs.forEach(def=>{createCalendarDOM(def);const cal=initCalendar(def);globalState.calendars.push(cal);});
+  }
+
+  function driveKeepLocal(){
+    document.getElementById('driveUpdateOverlay').classList.remove('open');
+    _drivePendingRemote=null;
+    driveSave();
+  }
+
+  function driveApplyRemote(){
+    const remote=_drivePendingRemote;_drivePendingRemote=null;
+    if(!remote)return;
+    document.getElementById('driveUpdateOverlay').classList.remove('open');
+    applyRemoteData(remote,remote._canonicalIso);
+    driveToast('✅ Données mises à jour depuis Google Drive');
+  }
+
+  async function driveCheckOnConnect(){
+    driveHideLoading();driveShowLogin(false);
+    await driveFetchAndCompare();
+    driveStartPolling();
+    buildDrawer(); // Refresh drawer with connected status
+  }
+
+  function driveStartPolling(){
+    if(drivePollInterval)return;
+    drivePollInterval=setInterval(()=>{if(!document.hidden&&driveAccessToken)driveFetchAndCompare();},15000);
+  }
+  function driveStopPolling(){if(drivePollInterval){clearInterval(drivePollInterval);drivePollInterval=null;}}
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&driveAccessToken)driveFetchAndCompare();});
+
+  // Hook markModified to trigger Drive save
+  const _origMarkModified=markModified;
+  // Override markModified to also push to Drive
+  window._driveMarkModified=()=>{
+    localStorage.setItem('suiviSante.lastModified',Date.now());
+    driveSave();
   };
-  document.getElementById('importSkipBtn').onclick=()=>{
-    document.getElementById('importBackdrop').classList.remove('open');
-    document.getElementById('importModal').classList.remove('open');
-    _importPendingBackup=null;
-  };
 
-  // Vérification au démarrage
-  checkCloudVersion();
-
-  // Polling toutes les 15 secondes si onglet visible
-  _versionCheckTimer=setInterval(()=>{
-    if(!document.hidden)checkCloudVersion();
-  },15000);
-
-  // Vérification dès que l'onglet redevient visible
-  document.addEventListener('visibilitychange',()=>{
-    if(!document.hidden)checkCloudVersion();
-  });
-
-
+  /* ── Migration ── */
 
   /* ════════════════════════════════════════
      v5.1 – Modale édition calendrier
