@@ -1507,6 +1507,9 @@
     _driveToastTimer=setTimeout(()=>{driveToastEl.style.opacity='0';},duration);
   }
 
+  let _driveInitResolve=null;
+  const driveInitReady=new Promise(res=>{_driveInitResolve=res;});
+
   function driveLoadLibs(){
     return new Promise(resolve=>{
       let gapiReady=false,gisReady=false;
@@ -1528,7 +1531,7 @@
       callback:async(resp)=>{
         if(resp.error){
           driveHideLoading();
-          if(wasConnected)driveShowLogin(true);
+          driveShowLogin(true);
           return;
         }
         driveAccessToken=resp.access_token;
@@ -1542,12 +1545,23 @@
         await driveCheckOnConnect();
       }
     });
-    if(wasConnected&&hint){driveShowLoading();driveTokenClient.requestAccessToken({prompt:'none'});}
-    else if(wasConnected&&!hint){driveShowLogin(true);}
-    else{driveShowLogin(true);}
+    // Signal that token client is ready
+    _driveInitResolve();
+
+    if(wasConnected&&hint){
+      driveShowLoading();
+      driveTokenClient.requestAccessToken({prompt:'none'});
+    } else {
+      driveShowLogin(true);
+    }
   }
 
-  function driveSignIn(){if(!driveTokenClient)return;driveTokenClient.requestAccessToken({prompt:'select_account'});}
+  async function driveSignIn(){
+    // Wait for libs to finish loading before requesting token
+    await driveInitReady;
+    if(!driveTokenClient)return;
+    driveTokenClient.requestAccessToken({prompt:'select_account'});
+  }
 
   function driveSignOut(){
     if(driveAccessToken)google.accounts.oauth2.revoke(driveAccessToken);
